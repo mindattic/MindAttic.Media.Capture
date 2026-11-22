@@ -184,3 +184,11 @@ _Nothing recorded yet._
 | M.CAPT-T148 | 2026-11-10 | chore | closed | Crash recovery / fleet sync: commit the regenerated docs/USER_STORIES.md left uncommitted after other tickets closed elsewhere | — |
 | M.CAPT-T149 | 2026-11-17 | docs | closed | Update USER_STORIES.md | — |
 | M.CAPT-T150 | 2026-11-18 | chore | closed | Add 2 file(s); Update 1 file(s); Remove 2 file(s) | — |
+| M.CAPT-T151 | 2026-11-22 | feature | open | Add CaptureEngine.ExportGif(frames, fps) using ffmpeg with a generated palette, fps 2 or 4 (default 2), last frame held 2s, width capped at 1280, each frame stamped with its time | — |
+| M.CAPT-T152 | 2026-11-22 | feature | open | Add 'capture gif <folder>' CLI command with --fps and width options that stitches an existing folder's PNGs into a gif via ExportGif | — |
+| M.CAPT-T153 | 2026-11-22 | feature | open | Make '-capture screen 15m 5h gif' write {RepoName}_{start}.gif from the session's PNGs at session end (including a session that ends early) | — |
+| M.CAPT-T154 | 2026-11-22 | feature | open | Add tests for gif export: frame order, a missing or odd-sized frame, a session that ends early | — |
+| M.CAPT-T155 | 2026-11-22 | feature | open | Add a regular main window with Record Screen/App/Area, Screenshot, saved regions, Stop and Settings actions, wired to the existing tray actions | — |
+| M.CAPT-T156 | 2026-11-22 | feature | open | Show recording state on the window's taskbar button (overlay/progress) and exit the app when the window is closed | — |
+| M.CAPT-T157 | 2026-11-22 | feature | open | Drop the NotifyIcon and the start-with-Windows default; make global hotkeys work only while the window is open | — |
+| M.CAPT-T158 | 2026-11-22 | chore | closed | 2026-11-22 morning | — |
