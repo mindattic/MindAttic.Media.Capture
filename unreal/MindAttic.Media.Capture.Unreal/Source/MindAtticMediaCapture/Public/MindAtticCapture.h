@@ -60,10 +60,45 @@ namespace MindAttic::Media::Capture
 	MINDATTICMEDIACAPTURE_API void Note(const FString& line);
 
 	/// `CaptureUnity.Engine.ScreenshotAsync(tag)`: a request id (0 when capture is off) to wait on with ScreenshotResult.
-	MINDATTICMEDIACAPTURE_API int32 Screenshot(const FString& tag, const Data& data = Data());
+	/// With `setDir` (a preview set folder, from NewPreviewSet) the shot is also copied into the set with `caption`, and
+	/// the result names the set's copy.
+	MINDATTICMEDIACAPTURE_API int32 Screenshot(const FString& tag, const Data& data = Data(), const FString& setDir = FString(), const FString& caption = FString());
 
 	/// True once screenshot `id` is answered: `ok` and the file, or the error.
 	MINDATTICMEDIACAPTURE_API bool ScreenshotResult(int32 id, bool& ok, FString& fileOrError);
+
+	/// `StartRecordingAsync`: a request id (0 when capture is off); its result is ok once recording.
+	MINDATTICMEDIACAPTURE_API int32 StartRecording(const FString& tag = TEXT("recording"), const Data& data = Data());
+
+	/// `StopRecordingAsync`: its result names the exported files.
+	MINDATTICMEDIACAPTURE_API int32 StopRecording();
+
+	/// `PauseRecording`: footage until ResumeRecording is left out.
+	MINDATTICMEDIACAPTURE_API int32 PauseRecording();
+
+	/// `ResumeRecording`.
+	MINDATTICMEDIACAPTURE_API int32 ResumeRecording();
+
+	/// A clip of `before` seconds of the past (needs the replay ring; 0 for none) and `after` seconds from now.
+	MINDATTICMEDIACAPTURE_API int32 Clip(double before = 0, double after = 10, const FString& tag = TEXT("clip"), const Data& data = Data());
+
+	/// `SaveReplayAsync`: the last `before` seconds (0: the session's replay length) and `after` more.
+	MINDATTICMEDIACAPTURE_API int32 SaveReplay(double before = 0, double after = 0, const FString& tag = TEXT("replay"), const Data& data = Data());
+
+	/// True once request `id` (from any of the above) is answered: `ok` with its files, or the error. Results can
+	/// arrive in any order; each is handed out once.
+	MINDATTICMEDIACAPTURE_API bool Result(int32 id, bool& ok, TArray<FString>& files, FString& error);
+
+	/// `capture set new --title --ticket --json`: a new preview set's folder, or empty when the agent is missing or failed.
+	/// Runs the agent and waits for it (a fraction of a second); works whether or not -capture is on.
+	MINDATTICMEDIACAPTURE_API FString NewPreviewSet(const FString& title, const FString& ticket = FString());
+
+	/// `capture set add`: copies `files` into the set as its next item (one item named `tag`, else one per file) and
+	/// returns the set's copies.
+	MINDATTICMEDIACAPTURE_API TArray<FString> AddToPreviewSet(const FString& dir, const TArray<FString>& files, const FString& tag = FString(), const FString& caption = FString());
+
+	/// `capture set show`: opens the set in Media.Viewer; what it did (pipe, launched, photos, none), or empty on failure.
+	MINDATTICMEDIACAPTURE_API FString ShowPreviewSet(const FString& dir);
 
 	/// The game is quitting: asks the host to stop and export (it also does when the game's process ends).
 	MINDATTICMEDIACAPTURE_API void Shutdown();

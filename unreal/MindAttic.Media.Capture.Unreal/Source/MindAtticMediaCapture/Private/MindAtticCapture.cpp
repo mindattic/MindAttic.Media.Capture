@@ -42,7 +42,13 @@ namespace MindAttic::Media::Capture
 			void* StdoutWrite = nullptr; // the host's end
 			TArray<uint8> Pending;
 			int32 NextId = 0;
-			TMap<int32, TPair<bool, FString>> Results;
+			struct FResult
+			{
+				bool Ok = false;
+				TArray<FString> Files;
+				FString Error;
+			};
+			TMap<int32, FResult> Results;
 			double StartedAt = 0;
 		};
 
@@ -150,14 +156,14 @@ namespace MindAttic::Media::Capture
 			{
 				int32 id = 0;
 				msg->TryGetNumberField(TEXT("id"), id);
-				bool ok = false;
-				msg->TryGetBoolField(TEXT("ok"), ok);
-				FString detail;
+				State::FResult result;
+				msg->TryGetBoolField(TEXT("ok"), result.Ok);
+				msg->TryGetStringField(TEXT("error"), result.Error);
 				const TArray<TSharedPtr<FJsonValue>>* files = nullptr;
-				if (ok && msg->TryGetArrayField(TEXT("files"), files) && files && files->Num() > 0) detail = (*files)[0]->AsString();
-				else msg->TryGetStringField(TEXT("error"), detail);
-				if (id != 0) s.Results.Add(id, TPair<bool, FString>(ok, detail));
-				else if (!ok) UE_LOG(LogMindAtticCapture, Warning, TEXT("[MindAttic.Media.Capture] The capture host rejected a request: %s"), *detail);
+				if (msg->TryGetArrayField(TEXT("files"), files) && files)
+					for (const TSharedPtr<FJsonValue>& f : *files) result.Files.Add(f->AsString());
+				if (id != 0) s.Results.Add(id, MoveTemp(result));
+				else if (!result.Ok) UE_LOG(LogMindAtticCapture, Warning, TEXT("[MindAttic.Media.Capture] The capture host rejected a request: %s"), *result.Error);
 			}
 			else if (op == TEXT("stopped"))
 			{
@@ -240,6 +246,34 @@ namespace MindAttic::Media::Capture
 				return;
 			}
 			UE_LOG(LogMindAtticCapture, Display, TEXT("[MindAttic.Media.Capture] Capture host %s started (pid %u)."), *host, pid);
+		}
+
+		/// Sends `{"op":op,"id":N<fields>}` and returns N, or 0 when capture is off. `fields` starts with a comma.
+		int32 Request(const TCHAR* op, const FString& fields = FString())
+		{
+			if (!Enabled()) return 0;
+			const int32 id = ++S().NextId;
+			Send(FString::Printf(TEXT("{\"op\":\"%s\",\"id\":%d%s}"), op, id, *fields));
+			return id;
+		}
+
+		/// Runs the located agent with `args` (a `capture set` command) and waits for it: its stdout, or false.
+		bool RunAgent(const FString& args, FString& out)
+		{
+			const FString agent = AgentLocator::Find();
+			if (agent.IsEmpty())
+			{
+				UE_LOG(LogMindAtticCapture, Error, TEXT("[MindAttic.Media.Capture] No capture agent was found for `capture %s`. MindAttic.Media.Capture's tools/install.ps1 installs it."), *args);
+				return false;
+			}
+			int32 code = -1;
+			FString err;
+			if (!FPlatformProcess::ExecProcess(*agent, *args, &code, &out, &err, *FPaths::GetPath(agent)) || code != 0)
+			{
+				UE_LOG(LogMindAtticCapture, Error, TEXT("[MindAttic.Media.Capture] `capture %s` failed (%d): %s"), *args, code, *err.TrimStartAndEnd());
+				return false;
+			}
+			return true;
 		}
 	}
 
@@ -348,39 +382,106 @@ namespace MindAttic::Media::Capture
 		Send(FString::Printf(TEXT("{\"op\":\"note\",\"text\":%s}"), *JsonString(line)));
 	}
 
-	int32 Screenshot(const FString& tag, const Data& data)
+	int32 Screenshot(const FString& tag, const Data& data, const FString& setDir, const FString& caption)
 	{
-		if (!Enabled()) return 0;
-		const int32 id = ++S().NextId;
-		Send(FString::Printf(TEXT("{\"op\":\"screenshot\",\"id\":%d,\"tag\":%s,\"data\":%s}"), id, *JsonString(tag), *data.ToJson()));
-		return id;
+		FString fields = FString::Printf(TEXT(",\"tag\":%s,\"data\":%s"), *JsonString(tag), *data.ToJson());
+		if (!setDir.IsEmpty()) fields += FString::Printf(TEXT(",\"set\":%s"), *JsonString(setDir));
+		if (!caption.IsEmpty()) fields += FString::Printf(TEXT(",\"caption\":%s"), *JsonString(caption));
+		return Request(TEXT("screenshot"), fields);
 	}
 
 	bool ScreenshotResult(int32 id, bool& ok, FString& fileOrError)
 	{
+		TArray<FString> files;
+		FString error;
+		if (!Result(id, ok, files, error)) return false;
+		fileOrError = ok && files.Num() > 0 ? files[0] : error;
+		return true;
+	}
+
+	int32 StartRecording(const FString& tag, const Data& data)
+	{
+		return Request(TEXT("record-start"), FString::Printf(TEXT(",\"tag\":%s,\"data\":%s"), *JsonString(tag), *data.ToJson()));
+	}
+
+	int32 StopRecording() { return Request(TEXT("record-stop")); }
+	int32 PauseRecording() { return Request(TEXT("record-pause")); }
+	int32 ResumeRecording() { return Request(TEXT("record-resume")); }
+
+	int32 Clip(double before, double after, const FString& tag, const Data& data)
+	{
+		FString fields = FString::Printf(TEXT(",\"after\":%s,\"tag\":%s,\"data\":%s"), *FString::SanitizeFloat(after, 0), *JsonString(tag), *data.ToJson());
+		if (before > 0) fields += FString::Printf(TEXT(",\"before\":%s"), *FString::SanitizeFloat(before, 0));
+		return Request(TEXT("clip"), fields);
+	}
+
+	int32 SaveReplay(double before, double after, const FString& tag, const Data& data)
+	{
+		FString fields = FString::Printf(TEXT(",\"after\":%s,\"tag\":%s,\"data\":%s"), *FString::SanitizeFloat(after, 0), *JsonString(tag), *data.ToJson());
+		if (before > 0) fields += FString::Printf(TEXT(",\"before\":%s"), *FString::SanitizeFloat(before, 0));
+		return Request(TEXT("save-replay"), fields);
+	}
+
+	bool Result(int32 id, bool& ok, TArray<FString>& files, FString& error)
+	{
 		State& s = S();
+		files.Reset();
+		error.Reset();
 		if (id == 0)
 		{
 			ok = false;
-			fileOrError = TEXT("capture is off");
+			error = TEXT("capture is off");
 			return true;
 		}
 		Pump();
-		if (const TPair<bool, FString>* r = s.Results.Find(id))
+		State::FResult r;
+		if (s.Results.RemoveAndCopyValue(id, r))
 		{
-			ok = r->Key;
-			fileOrError = r->Value;
-			s.Results.Remove(id);
+			ok = r.Ok;
+			files = MoveTemp(r.Files);
+			error = MoveTemp(r.Error);
 			return true;
 		}
 		// The host is gone: nothing more will be answered.
 		if (!s.Proc.IsValid() || !FPlatformProcess::IsProcRunning(s.Proc))
 		{
 			ok = false;
-			fileOrError = TEXT("the capture host is not running");
+			error = TEXT("the capture host is not running");
 			return true;
 		}
 		return false;
+	}
+
+	FString NewPreviewSet(const FString& title, const FString& ticket)
+	{
+		FString args = FString::Printf(TEXT("set new --title %s --json"), *QuoteArg(title));
+		if (!ticket.IsEmpty()) args += FString::Printf(TEXT(" --ticket %s"), *QuoteArg(ticket));
+		FString out, dir;
+		if (!RunAgent(args, out)) return FString();
+		TSharedPtr<FJsonObject> manifest;
+		if (!FJsonSerializer::Deserialize(TJsonReaderFactory<>::Create(out), manifest) || !manifest.IsValid() || !manifest->TryGetStringField(TEXT("dir"), dir))
+			UE_LOG(LogMindAtticCapture, Error, TEXT("[MindAttic.Media.Capture] `capture set new` printed no set folder: %s"), *out);
+		return dir;
+	}
+
+	TArray<FString> AddToPreviewSet(const FString& dir, const TArray<FString>& files, const FString& tag, const FString& caption)
+	{
+		TArray<FString> added;
+		if (files.IsEmpty()) return added;
+		FString args = FString::Printf(TEXT("set add %s"), *QuoteArg(dir));
+		for (const FString& f : files) args += TEXT(" ") + QuoteArg(f);
+		if (!tag.IsEmpty()) args += FString::Printf(TEXT(" --tag %s"), *QuoteArg(tag));
+		if (!caption.IsEmpty()) args += FString::Printf(TEXT(" --caption %s"), *QuoteArg(caption));
+		FString out;
+		if (RunAgent(args, out)) out.ParseIntoArrayLines(added);
+		for (FString& line : added) line.TrimStartAndEndInline();
+		return added;
+	}
+
+	FString ShowPreviewSet(const FString& dir)
+	{
+		FString out;
+		return RunAgent(FString::Printf(TEXT("set show %s"), *QuoteArg(dir)), out) ? out.TrimStartAndEnd() : FString();
 	}
 
 	void Shutdown()
