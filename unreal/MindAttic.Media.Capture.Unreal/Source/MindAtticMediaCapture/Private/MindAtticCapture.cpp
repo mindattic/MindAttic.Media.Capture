@@ -50,6 +50,8 @@ namespace MindAttic::Media::Capture
 			};
 			TMap<int32, FResult> Results;
 			double StartedAt = 0;
+			/// A Play-In-Editor session's capture modes (BeginEditorSession); empty outside one.
+			FString EditorModes;
 		};
 
 		State& S()
@@ -232,7 +234,9 @@ namespace MindAttic::Media::Capture
 				*source, FPlatformProcess::GetCurrentProcessId(), *QuoteArg(settings->ResolveAppName()), *QuoteArg(FApp::GetBuildVersion()));
 			const FString defaults = settings->ResolveDefaultsFile();
 			if (!defaults.IsEmpty()) args += FString::Printf(TEXT(" --defaults %s"), *QuoteArg(defaults));
-			args += FString::Printf(TEXT(" --cmdline %s"), *QuoteArg(FCommandLine::GetOriginal()));
+			// In Play-In-Editor the editor's own command line has no -capture; the session's modes stand in for it.
+			const FString cmdline = s.EditorModes.IsEmpty() ? FString(FCommandLine::GetOriginal()) : TEXT("-capture ") + s.EditorModes;
+			args += FString::Printf(TEXT(" --cmdline %s"), *QuoteArg(cmdline));
 			uint32 pid = 0;
 			s.Proc = FPlatformProcess::CreateProc(*host, *args, /*bLaunchDetached*/ false, /*bLaunchHidden*/ true, /*bLaunchReallyHidden*/ true,
 				&pid, 0, *FPaths::GetPath(host), s.StdoutWrite, s.StdinRead);
@@ -331,7 +335,7 @@ namespace MindAttic::Media::Capture
 	{
 		State& s = S();
 		FrameFeed::TickStats();
-		if (s.ShutDown || !Requested()) return;
+		if (s.ShutDown || (!Requested() && s.EditorModes.IsEmpty())) return;
 		if (!s.Tried)
 		{
 			// Under -RenderOffScreen (no window) or -capture-source=frames, the game's own frames.
@@ -482,6 +486,38 @@ namespace MindAttic::Media::Capture
 	{
 		FString out;
 		return RunAgent(FString::Printf(TEXT("set show %s"), *QuoteArg(dir)), out) ? out.TrimStartAndEnd() : FString();
+	}
+
+	FString LastPreviewSet(const FString& repo)
+	{
+		FString args = TEXT("set list --limit 1 --json");
+		if (!repo.IsEmpty()) args += FString::Printf(TEXT(" --repo %s"), *QuoteArg(repo));
+		FString out, dir;
+		if (!RunAgent(args, out)) return FString();
+		TArray<TSharedPtr<FJsonValue>> sets;
+		if (FJsonSerializer::Deserialize(TJsonReaderFactory<>::Create(out), sets) && sets.Num() > 0 && sets[0].IsValid())
+		{
+			const TSharedPtr<FJsonObject>* set = nullptr;
+			if (sets[0]->TryGetObject(set) && set) (*set)->TryGetStringField(TEXT("dir"), dir);
+		}
+		return dir;
+	}
+
+	void BeginEditorSession(const FString& modes)
+	{
+		if (Requested() || modes.TrimStartAndEnd().IsEmpty()) return;
+		EndEditorSession();
+		State& s = S();
+		s = State();
+		s.EditorModes = modes.TrimStartAndEnd();
+	}
+
+	void EndEditorSession()
+	{
+		State& s = S();
+		if (s.EditorModes.IsEmpty()) return;
+		Shutdown();
+		s.EditorModes.Reset();
 	}
 
 	void Shutdown()

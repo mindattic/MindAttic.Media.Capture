@@ -100,6 +100,16 @@ namespace MindAttic::Media::Capture
 	/// `capture set show`: opens the set in Media.Viewer; what it did (pipe, launched, photos, none), or empty on failure.
 	MINDATTICMEDIACAPTURE_API FString ShowPreviewSet(const FString& dir);
 
+	/// `capture set list --repo --limit 1 --json`: the newest preview set's folder (of `repo`, else any), or empty.
+	MINDATTICMEDIACAPTURE_API FString LastPreviewSet(const FString& repo = FString());
+
+	/// Play-In-Editor: capture the session as if the game had `-capture <modes>` ("video", "screen 5", both). The host
+	/// starts on the play viewport's window once it is up. Nothing when the editor itself was started with -capture.
+	MINDATTICMEDIACAPTURE_API void BeginEditorSession(const FString& modes);
+
+	/// The Play-In-Editor session ended: stops the host (it exports the session) so the next one starts fresh.
+	MINDATTICMEDIACAPTURE_API void EndEditorSession();
+
 	/// The game is quitting: asks the host to stop and export (it also does when the game's process ends).
 	MINDATTICMEDIACAPTURE_API void Shutdown();
 }

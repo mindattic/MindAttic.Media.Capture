@@ -19,6 +19,12 @@
 			"Type": "Runtime",
 			"LoadingPhase": "Default",
 			"PlatformAllowList": [ "Win64" ]
+		},
+		{
+			"Name": "MindAtticMediaCaptureEditor",
+			"Type": "Editor",
+			"LoadingPhase": "Default",
+			"PlatformAllowList": [ "Win64" ]
 		}
 	],
 	"SupportedTargetPlatforms": [ "Win64" ]

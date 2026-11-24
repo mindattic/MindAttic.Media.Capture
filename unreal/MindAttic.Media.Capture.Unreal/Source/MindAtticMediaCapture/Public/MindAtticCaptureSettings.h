@@ -5,7 +5,7 @@
 
 #include "MindAtticCaptureSettings.generated.h"
 
-/// Project Settings > MindAttic > Media Capture: what the game hands `capture host`.
+/// Project Settings > Plugins > Media Capture: what the game hands `capture host`.
 UCLASS(Config = Game, DefaultConfig, meta = (DisplayName = "Media Capture"))
 class MINDATTICMEDIACAPTURE_API UMindAtticCaptureSettings : public UDeveloperSettings
 {
@@ -29,5 +29,5 @@ public:
 	/// The full path of DefaultsFile, or empty when none is set.
 	FString ResolveDefaultsFile() const;
 
-	virtual FName GetCategoryName() const override { return TEXT("MindAttic"); }
+	virtual FName GetCategoryName() const override { return TEXT("Plugins"); }
 };

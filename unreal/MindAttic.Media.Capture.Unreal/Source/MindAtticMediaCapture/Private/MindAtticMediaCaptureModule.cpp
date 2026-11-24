@@ -14,7 +14,8 @@ class FMindAtticMediaCaptureModule : public IModuleInterface
 public:
 	virtual void StartupModule() override
 	{
-		if (!MindAttic::Media::Capture::Requested()) return;
+		// The editor ticks it too: a Play-In-Editor session can start the host (BeginEditorSession).
+		if (!MindAttic::Media::Capture::Requested() && !GIsEditor) return;
 		TickHandle = FTSTicker::GetCoreTicker().AddTicker(FTickerDelegate::CreateLambda([](float)
 		{
 			MindAttic::Media::Capture::Tick();
