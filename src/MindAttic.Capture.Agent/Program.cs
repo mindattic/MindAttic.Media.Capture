@@ -41,6 +41,7 @@ namespace MindAttic.Capture.Agent
                     "run" => await RunAsync(args, log),
                     "serve" => await ServeAsync(args, log),
                     "set" => SetCommands.Run(args, log),
+                    "web" => await WebCommand.RunAsync(args, log),
                     "raise" => await ApiClient.RaiseAsync(args),
                     "stop" => Signal(StopEventName, "stop"),
                     "save" => Signal(SaveEventName, "save"),
@@ -75,6 +76,8 @@ namespace MindAttic.Capture.Agent
                   capture set add <dir> <file...> [--tag T] [--caption C] [--copy|--move]
                   capture set list [--repo R] [--limit N] [--json]
                   capture set show <dir> [--select FILE] [--no-launch]   prints pipe|launched|photos|none
+                  capture web <url> [--viewport WxH] [--device NAME] [--full-page] [--wait-for SEL] [--wait Ns]
+                                   [--dark] [--fake-media] [--video Ns] [--set <dir>]   screenshot/record a page (Playwright, installed Edge)
                   capture recover [root]                   export sessions left behind by crashed apps
 
                 target:  --self | --monitor N | --region x,y,w,h | --window "title" | --hwnd 0x1234 | --process name

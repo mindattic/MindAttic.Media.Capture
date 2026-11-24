@@ -14,6 +14,7 @@
   <ItemGroup>
     <ProjectReference Include="..\MindAttic.Capture.Windows\MindAttic.Capture.Windows.csproj" />
     <ProjectReference Include="..\MindAttic.Capture.Sets\MindAttic.Capture.Sets.csproj" />
+    <ProjectReference Include="..\MindAttic.Capture.Web\MindAttic.Capture.Web.csproj" />
     <!-- agent.json lives under VaultPaths.LocalApp("Capture"), so MINDATTIC_VAULT_LOCAL_ROOT relocates it. -->
     <PackageReference Include="MindAttic.Vault" Version="8.0.0" />
   </ItemGroup>

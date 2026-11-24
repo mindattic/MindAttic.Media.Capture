@@ -7,6 +7,7 @@
     <Project Path="src/MindAttic.Capture.Tray/MindAttic.Capture.Tray.csproj" />
     <Project Path="src/MindAttic.Capture.Wpf/MindAttic.Capture.Wpf.csproj" />
     <Project Path="src/MindAttic.Capture.WebView2/MindAttic.Capture.WebView2.csproj" />
+    <Project Path="src/MindAttic.Capture.Web/MindAttic.Capture.Web.csproj" />
   </Folder>
   <Folder Name="/tests/">
     <Project Path="tests/MindAttic.Capture.Tests/MindAttic.Capture.Tests.csproj" />
