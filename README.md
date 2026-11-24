@@ -277,7 +277,9 @@ capture set show $set                                                # pipe | la
 ```
 
 `--set` makes shot and record write to a staging folder inside the set and then import the files as the set's next
-number, sidecars included. `capture set show` hands the set to a running Media.Viewer, else starts it
+number, sidecars included. `capture set new --json` prints the manifest with the set folder as `dir` (the same
+field `capture set list --json` gives each set); `preview.json` itself never stores the folder.
+`capture set show` hands the set to a running Media.Viewer, else starts it
 (`C:\Apps\MindAttic.Media.Viewer\MindAttic.Media.Viewer.exe`, or `MINDATTIC_MEDIA_VIEWER` when set), else opens the first image with Photos, and prints
 which; `--no-launch` only lists the items. The library behind it, `MindAttic.Media.Capture.Sets`, is packed to
 `C:\LocalNuGet`.

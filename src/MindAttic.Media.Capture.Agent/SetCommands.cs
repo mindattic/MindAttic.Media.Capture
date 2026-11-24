@@ -29,8 +29,17 @@ internal static class SetCommands
         var title = args.Get("title") ?? args.Positional.ElementAtOrDefault(1)
             ?? throw new CaptureException(CaptureError.InvalidArgument, "set new needs --title.");
         var set = store.Create(title, args.Get("ticket"), args.Get("repo"));
-        Console.WriteLine(args.Has("json") ? PreviewJson.Serialize(set) : set.Directory);
+        Console.WriteLine(args.Has("json") ? ManifestJson(set) : set.Directory);
         return 0;
+    }
+
+    /// <summary>The set's manifest with its folder as <c>dir</c> first, the name <c>set list --json</c> and MCP use;
+    /// <c>preview.json</c> itself never stores the folder.</summary>
+    internal static string ManifestJson(PreviewSet set)
+    {
+        var node = JsonSerializer.SerializeToNode(set, PreviewJson.Options)!.AsObject();
+        node.Insert(0, "dir", set.Directory);
+        return node.ToJsonString(PreviewJson.Options);
     }
 
     private static int Add(AgentArgs args, PreviewSetStore store)
