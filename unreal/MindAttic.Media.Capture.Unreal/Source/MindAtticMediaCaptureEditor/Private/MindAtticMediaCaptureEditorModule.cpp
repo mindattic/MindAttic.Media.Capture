@@ -18,10 +18,10 @@ namespace MindAttic::Media::Capture::Editor
 	{
 		bool Playing() { return GEditor && GEditor->PlayWorld != nullptr; }
 
-		/// R:\MindAttic\Capture\<AppName>, else the capture root when the app has no folder yet.
+		/// R:\MindAttic\Media\Capture\<AppName>, else the capture root when the app has no folder yet.
 		FString CaptureRoot()
 		{
-			const FString root = TEXT("R:\\MindAttic\\Capture");
+			const FString root = TEXT("R:\\MindAttic\\Media\\Capture");
 			const FString app = FPaths::Combine(root, GetDefault<UMindAtticCaptureSettings>()->ResolveAppName());
 			return IFileManager::Get().DirectoryExists(*app) ? app : root;
 		}
@@ -89,7 +89,7 @@ namespace MindAttic::Media::Capture::Editor
 			FToolMenuSection& output = menu->AddSection(TEXT("Output"), LOCTEXT("Output", "Output"));
 			output.AddMenuEntry(TEXT("OpenCaptureFolder"),
 				LOCTEXT("OpenCaptureFolder", "Open Capture Folder"),
-				LOCTEXT("OpenCaptureFolderTip", "The running session's folder, else R:\\MindAttic\\Capture\\<AppName>."),
+				LOCTEXT("OpenCaptureFolderTip", "The running session's folder, else R:\\MindAttic\\Media\\Capture\\<AppName>."),
 				FSlateIcon(), FUIAction(FExecuteAction::CreateStatic(&OpenFolder)));
 			output.AddMenuEntry(TEXT("OpenLastPreviewSet"),
 				LOCTEXT("OpenLastPreviewSet", "Open Last Preview Set"),
