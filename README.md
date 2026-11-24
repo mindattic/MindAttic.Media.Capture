@@ -1,4 +1,4 @@
-# MindAttic.Capture
+# MindAttic.Media.Capture
 
 Programmatic video capture and screenshots for MindAttic games and apps: trailer footage, store screenshots, devlog clips and bug-repro video, triggered from code or recorded by hand from the tray.
 
@@ -22,21 +22,22 @@ Programmatic video capture and screenshots for MindAttic games and apps: trailer
 - Crash recovery: finished segments stay on disk and are exported on the next launch or by `capture recover`.
 
 ```text
- your app / game                     MindAttic.Capture                               R:\MindAttic\Capture\
- ───────────────                     ─────────────────                               ─────────────────────
+ your app / game                     MindAttic.Media.Capture                         R:\MindAttic\Capture\
+ ───────────────                     ───────────────────────                         ─────────────────────
  Capture.Raise("critical-hit") ──>  trigger rules ──> replay / clip / screenshot ──>  {RepoName}\{RepoName}_{timestamp}.{ext}
  -capture video / screen N     ──>  session tape (1 s segments, lossless FFV1)  ──>    {RepoName}_{start}.mkv + .mp4
  ScreenshotAsync / ClipAsync   ──>  host adapter (desktop, WPF, WebView2, Unity)       *.png  *.mp4  *.json sidecars
                                                                                         session.json manifest
 ```
 
-| Package | Target | What it does |
+| Package (1.0.0) | Target | What it does |
 |---|---|---|
-| `MindAttic.Capture` | netstandard2.1; net10.0 | Core: API, `-capture` parsing, trigger rules, rolling tape, exports, sidecars, session manifest. No third-party dependencies (Unity consumes the netstandard2.1 build). |
-| `MindAttic.Capture.Windows` | net10.0-windows10.0.19041 | Desktop capture: Windows Graphics Capture for windows, Desktop Duplication / GDI for monitors and regions, WASAPI audio, global hotkeys, DI. |
-| `MindAttic.Capture.Wpf` | net10.0-windows10.0.19041 | `CaptureWpf.Init(this, e.Args)`: records the main window at native size, export on exit. |
-| `MindAttic.Capture.WebView2` | net10.0-windows10.0.19041 | `window.mindattic.capture` JavaScript bridge for any WebView2. |
-| `MindAttic.Capture.Sets` | net10.0 | Preview sets: `preview.json` model, store (create, list, import under a per-set lock), media kinds, Media.Viewer handoff. |
+| `MindAttic.Media.Capture` | netstandard2.1; net10.0 | Core: API, `-capture` parsing, trigger rules, rolling tape, exports, sidecars, session manifest. No third-party dependencies (Unity consumes the netstandard2.1 build). |
+| `MindAttic.Media.Capture.Windows` | net10.0-windows10.0.19041 | Desktop capture: Windows Graphics Capture for windows, Desktop Duplication / GDI for monitors and regions, WASAPI audio, global hotkeys, DI. |
+| `MindAttic.Media.Capture.Wpf` | net10.0-windows10.0.19041 | `CaptureWpf.Init(this, e.Args)`: records the main window at native size, export on exit. |
+| `MindAttic.Media.Capture.WebView2` | net10.0-windows10.0.19041 | `window.mindattic.capture` JavaScript bridge for any WebView2. |
+| `MindAttic.Media.Capture.Sets` | net10.0 | Preview sets: `preview.json` model, store (create, list, import under a per-set lock), media kinds, Media.Viewer handoff. |
+| `MindAttic.Media.Capture.Web` | net10.0 | Headless web page screenshots and video through Playwright and the installed Microsoft Edge, with capture sidecars. |
 | `capture.exe` (agent) | net10.0-windows10.0.19041 | CLI and localhost API: record any app with no code changes, serve browser pages and scripts, finalize and recover sessions. |
 | `com.mindattic.media.capture` (Unity) | Unity 6, Windows | Game-view capture via GPU readback, game audio, Play Mode menu; reads `-capture` from the player command line. |
 
@@ -80,7 +81,7 @@ that imports into any editor, WebM, GIF or animated WebP, and a thumbnail.
 
 ## The `-capture` flag
 
-Every MindAttic GUI app wired to MindAttic.Capture understands the same flag:
+Every MindAttic GUI app wired to MindAttic.Media.Capture understands the same flag:
 
 ```
 Game.exe -capture video                 # film from start to exit at the app's native resolution
@@ -278,8 +279,9 @@ capture set show $set                                                # pipe | la
 `--set` makes shot and record write to a staging folder inside the set and then import the files as the set's next
 number, sidecars included. `capture set show` hands the set to a running Media.Viewer, else starts it
 (`C:\Apps\MindAttic.Media.Viewer\MindAttic.Media.Viewer.exe`, or the older `C:\Apps\MindAttic.MediaViewer` install), else opens the first image with Photos, and prints
-which; `--no-launch` only lists the items. The library behind it, `MindAttic.Capture.Sets`, is packed to
+which; `--no-launch` only lists the items. The library behind it, `MindAttic.Media.Capture.Sets`, is packed to
 `C:\LocalNuGet`.
+
 ## Output
 
 Everything goes to `R:\MindAttic\Capture\{RepoName}\`, one folder per app run. The session's timestamp is UTC,
@@ -317,7 +319,7 @@ Capture is a development tool and stays out of shipped builds:
 - **.NET apps:** reference the packages only outside Release. Automata is the example:
   ```xml
   <ItemGroup Condition="'$(Configuration)' != 'Release'">
-    <PackageReference Include="MindAttic.Capture.Wpf" Version="1.0.0" />
+    <PackageReference Include="MindAttic.Media.Capture.Wpf" Version="1.0.0" />
   </ItemGroup>
   ```
   The packages define `MINDATTIC_CAPTURE`, so wrap the init call and hooks in `#if MINDATTIC_CAPTURE`.
@@ -356,9 +358,44 @@ dotnet build MindAttic.Media.Capture.slnx
 dotnet test  MindAttic.Media.Capture.slnx      # engine and desktop tests need ffmpeg and an interactive desktop
 ```
 
-Source layout: `src\` holds the core, Windows, Wpf, WebView2, Agent and Tray projects; `tests\` holds
+Source layout: `src\` holds the core, Windows, Wpf, WebView2, Sets, Web, Agent and Tray projects
+(`MindAttic.Media.Capture.*`, namespaces the same); `tests\` holds
 `MindAttic.Media.Capture.Tests` and `MindAttic.Media.Capture.Windows.Tests`; `unity\` is the Unity package and `js\`
 the JavaScript client. `capture recover` with no root also scans the fallback output folder.
+
+## Formerly MindAttic.Capture
+
+The repo, projects, packages, namespaces and Unity package were renamed to MindAttic.Media.Capture
+(M.CAPT-T170 to T179). The new package ids start again at 1.0.0:
+
+| Was | Now |
+|---|---|
+| `MindAttic.Capture` 2.0.0 | `MindAttic.Media.Capture` 1.0.0 |
+| `MindAttic.Capture.Windows` 1.0.0 | `MindAttic.Media.Capture.Windows` 1.0.0 |
+| `MindAttic.Capture.Wpf` 1.0.0 | `MindAttic.Media.Capture.Wpf` 1.0.0 |
+| `MindAttic.Capture.WebView2` 2.0.0 | `MindAttic.Media.Capture.WebView2` 1.0.0 |
+| `MindAttic.Capture.Sets` 2.0.0 | `MindAttic.Media.Capture.Sets` 1.0.0 |
+| `MindAttic.Capture.Web` 1.0.0 | `MindAttic.Media.Capture.Web` 1.0.0 |
+| namespaces `MindAttic.Capture.*` | `MindAttic.Media.Capture.*` |
+| Unity `com.mindattic.capture` (`unity/com.mindattic.capture`) | `com.mindattic.media.capture` (`unity/com.mindattic.media.capture`) |
+| `MindAttic.Capture.slnx`, github.com/mindattic/MindAttic.Capture | `MindAttic.Media.Capture.slnx`, github.com/mindattic/MindAttic.Media.Capture |
+| `C:\Apps\MindAttic.Capture`, "MindAttic Capture" shortcut | `C:\Apps\MindAttic.Media.Capture`, "MindAttic Media Capture" shortcut (`run.ps1` removes the old ones) |
+
+To move a consumer: change each `PackageReference` id (and version to 1.0.0), replace `using MindAttic.Capture`
+with `using MindAttic.Media.Capture`, and point `Packages/manifest.json` at
+`"com.mindattic.media.capture": "file:../../MindAttic.Media.Capture/unity/com.mindattic.media.capture"`.
+
+These names stay on purpose, so installed tools, scripts and saved output keep working:
+
+- the `capture.exe` and `capture-tray.exe` executables, installed in `%LOCALAPPDATA%\MindAttic\Capture\bin`, with
+  `tray.json` and `agent.json` beside them in `%LOCALAPPDATA%\MindAttic\Capture`;
+- the output root `R:\MindAttic\Capture`;
+- the `MINDATTIC_CAPTURE` define, the `MINDATTIC_CAPTURE_*` environment variables (`MINDATTIC_CAPTURE_AGENT`) and
+  the `MindAtticCaptureStrip` MSBuild property;
+- the JavaScript bridge `window.mindattic.capture`;
+- runtime ids: event and mutex names, the settings app name, thread names, log and trace tags, Unity EditorPrefs keys,
+  GameObject names and the **MindAttic ▸ Capture** menu all keep `MindAttic.Capture`. The agent's product name is
+  now `MindAttic.Media.Capture.Agent`; the old `MindAttic.Capture.Agent` is still accepted for one release.
 
 ## Documentation
 
