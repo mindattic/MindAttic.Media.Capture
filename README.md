@@ -36,7 +36,7 @@ Programmatic video capture and screenshots for MindAttic games and apps: trailer
 | `MindAttic.Capture.Windows` | net10.0-windows10.0.19041 | Desktop capture: Windows Graphics Capture for windows, Desktop Duplication / GDI for monitors and regions, WASAPI audio, global hotkeys, DI. |
 | `MindAttic.Capture.Wpf` | net10.0-windows10.0.19041 | `CaptureWpf.Init(this, e.Args)`: records the main window at native size, export on exit. |
 | `MindAttic.Capture.WebView2` | net10.0-windows10.0.19041 | `window.mindattic.capture` JavaScript bridge for any WebView2. |
-| `MindAttic.Capture.Sets` | net10.0 | Preview sets: `preview.json` model, store (create, list, import under a per-set lock), media kinds, MediaViewer handoff. |
+| `MindAttic.Capture.Sets` | net10.0 | Preview sets: `preview.json` model, store (create, list, import under a per-set lock), media kinds, Media.Viewer handoff. |
 | `capture.exe` (agent) | net10.0-windows10.0.19041 | CLI and localhost API: record any app with no code changes, serve browser pages and scripts, finalize and recover sessions. |
 | `com.mindattic.media.capture` (Unity) | Unity 6, Windows | Game-view capture via GPU readback, game audio, Play Mode menu; reads `-capture` from the player command line. |
 
@@ -262,7 +262,7 @@ Placed beside the exe (picked up automatically), or passed with `-capture-config
 ## Preview sets (`capture set`)
 
 A preview set is one folder of numbered media plus `preview.json` (schema `mindattic.preview/1`) that an agent
-fills and MindAttic.MediaViewer shows; see [docs/design/preview-sets.md](docs/design/preview-sets.md). Sets live
+fills and MindAttic.Media.Viewer shows; see [docs/design/preview-sets.md](docs/design/preview-sets.md). Sets live
 in `R:\MindAttic\Preview\{Repo}\{yyyy-MM-ddTHH.mm.ss}_{TICKET}_{slug}\` (`%USERPROFILE%\Pictures\MindAttic\Preview`
 when `R:` is missing) and hold `NNN_{tag}.{ext}` files with their sidecars.
 
@@ -276,8 +276,8 @@ capture set show $set                                                # pipe | la
 ```
 
 `--set` makes shot and record write to a staging folder inside the set and then import the files as the set's next
-number, sidecars included. `capture set show` hands the set to a running MediaViewer, else starts it
-(`C:\Apps\MindAttic.MediaViewer\MindAttic.MediaViewer.exe`), else opens the first image with Photos, and prints
+number, sidecars included. `capture set show` hands the set to a running Media.Viewer, else starts it
+(`C:\Apps\MindAttic.Media.Viewer\MindAttic.Media.Viewer.exe`, or the older `C:\Apps\MindAttic.MediaViewer` install), else opens the first image with Photos, and prints
 which; `--no-launch` only lists the items. The library behind it, `MindAttic.Capture.Sets`, is packed to
 `C:\LocalNuGet`.
 ## Output

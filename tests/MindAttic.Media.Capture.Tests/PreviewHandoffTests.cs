@@ -7,7 +7,12 @@ public class PreviewHandoffTests
 {
     [Test]
     public void PipeName_IsTheViewersPerUserPipe() =>
-        Assert.That(PreviewHandoff.PipeName, Does.StartWith("mindattic-mediaviewer-cli-").And.Not.Contain(" "));
+        Assert.That(PreviewHandoff.PipeName, Does.StartWith("mindattic-media-viewer-cli-").And.Not.Contain(" "));
+
+    [Test]
+    public void LegacyPipeName_IsThePreRenameViewersPipeForTheSameUser() =>
+        Assert.That(PreviewHandoff.LegacyPipeName,
+            Is.EqualTo("mindattic-mediaviewer-cli-" + PreviewHandoff.PipeName["mindattic-media-viewer-cli-".Length..]));
 
     [Test]
     public void Payload_IsOneArgumentPerLineThenAnEmptyLine()
