@@ -258,14 +258,23 @@ namespace MindAttic.Media.Capture.Agent
         private static async Task<int> RecoverAsync(AgentArgs args, ICaptureLog log)
         {
             var explicitRoot = args.Positional.FirstOrDefault() ?? args.Get("out");
-            var defaults = new CaptureOptions();
-            // Sessions are staged under the fallback root when the output drive was missing, so scan that too.
-            var roots = explicitRoot is not null ? [explicitRoot] : new[] { defaults.OutputRoot, defaults.FallbackRoot };
             var n = 0;
-            foreach (var root in roots.Distinct(StringComparer.OrdinalIgnoreCase))
+            foreach (var root in RecoverRoots(explicitRoot, new CaptureOptions()))
                 n += await SessionFinalizer.RecoverAsync(root, new SystemTextCaptureJson(), log, CancellationToken.None);
             Console.Error.WriteLine($"Recovered {n} session(s).");
             return 0;
+        }
+
+        /// <summary>Where <c>capture recover</c> looks: the given root alone, else the output root, its fallback and,
+        /// while the output root is the default, the legacy root.</summary>
+        internal static IReadOnlyList<string> RecoverRoots(string? explicitRoot, CaptureOptions defaults, string legacyRoot = CaptureOptions.LegacyOutputRoot)
+        {
+            if (explicitRoot is not null) return [explicitRoot];
+            // Sessions are staged under the fallback root when the output drive was missing, so scan that too.
+            var roots = new List<string> { defaults.OutputRoot, defaults.FallbackRoot };
+            if (string.Equals(defaults.OutputRoot, CaptureOptions.DefaultOutputRoot, StringComparison.OrdinalIgnoreCase)) // LEGACY-ROOT
+                roots.Add(legacyRoot); // LEGACY-ROOT
+            return roots.Distinct(StringComparer.OrdinalIgnoreCase).ToList();
         }
 
         private static int Signal(string name, string what)

@@ -19,7 +19,7 @@ internal static class SetCommands
             "new" => New(args, store),
             "add" => Add(args, store),
             "list" => List(args, store),
-            "show" => Show(args),
+            "show" => Show(args, store),
             _ => throw new CaptureException(CaptureError.InvalidArgument, "set needs new, add, list or show (see `capture help`)."),
         };
     }
@@ -45,7 +45,7 @@ internal static class SetCommands
     private static int Add(AgentArgs args, PreviewSetStore store)
     {
         if (args.Positional.Count < 3) throw new CaptureException(CaptureError.InvalidArgument, "set add needs <dir> <file...>.");
-        var dir = args.Positional[1];
+        var dir = store.Resolve(args.Positional[1]);
         var mode = args.Has("move") ? ImportMode.Move : ImportMode.Copy;
         var files = args.Positional.Skip(2).ToList();
         // One tag names one capture; without --tag every file is its own item, named after itself.
@@ -72,9 +72,9 @@ internal static class SetCommands
         return 0;
     }
 
-    private static int Show(AgentArgs args)
+    private static int Show(AgentArgs args, PreviewSetStore store)
     {
-        var dir = args.Positional.ElementAtOrDefault(1) ?? throw new CaptureException(CaptureError.InvalidArgument, "set show needs <dir>.");
+        var dir = store.Resolve(args.Positional.ElementAtOrDefault(1) ?? throw new CaptureException(CaptureError.InvalidArgument, "set show needs <dir>."));
         PreviewSet set;
         try
         {

@@ -12,6 +12,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\MindAttic.Media.Capture\MindAttic.Media.Capture.csproj" />
+    <InternalsVisibleTo Include="MindAttic.Media.Capture.Tests" />
   </ItemGroup>
 
 </Project>

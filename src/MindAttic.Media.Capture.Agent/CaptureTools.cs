@@ -114,13 +114,14 @@ public static class CaptureTools
     {
         var store = new PreviewSetStore(log: Log);
         var source = new PreviewSource { Type = "file", Path = Path.GetFullPath(file[0]) };
-        var items = store.Import(dir, file, tag, caption, source, move ? ImportMode.Move : ImportMode.Copy);
+        var items = store.Import(store.Resolve(dir), file, tag, caption, source, move ? ImportMode.Move : ImportMode.Copy);
         return new { items = items.Select(ToItem) };
     }
 
     [McpServerTool(Name = "show")]
     [Description("Returns a preview set's manifest (capture set show) as data, without launching a viewer.")]
-    public static object Show([Description("The preview set folder.")] string dir) => ToManifest(PreviewSetStore.Open(dir));
+    public static object Show([Description("The preview set folder.")] string dir) =>
+        ToManifest(PreviewSetStore.Open(new PreviewSetStore(log: Log).Resolve(dir)));
 
     [McpServerTool(Name = "list_sets")]
     [Description("Lists known preview sets (capture set list), newest first.")]

@@ -53,6 +53,39 @@ public sealed class PreviewSetStore
     /// <summary>The root in use, created on first use.</summary>
     public string Root => _root ??= OutputManager.ResolveRoot(_configuredRoot, FallbackRoot, _log);
 
+    /// <summary>The old root readers also search, only while the root is the default; null for any other root.</summary>
+    internal string? LegacyReadRoot { get; init; } // LEGACY-ROOT
+
+    /// <summary><see cref="LegacyRoot"/> for the default root, else null: a configured root never reads the old one.</summary>
+    public static string? LegacyRootFor(string? root) =>
+        string.IsNullOrWhiteSpace(root) || string.Equals(Path.GetFullPath(root!).TrimEnd('\\', '/'), DefaultRoot, StringComparison.OrdinalIgnoreCase)
+            ? LegacyRoot // LEGACY-ROOT
+            : null;
+
+    // Readers look under Root first, then the legacy root; writers only ever use Root.
+    private IEnumerable<string> ReadRoots()
+    {
+        yield return Root;
+        var legacy = LegacyReadRoot ?? LegacyRootFor(_configuredRoot); // LEGACY-ROOT
+        if (legacy is not null && Directory.Exists(legacy) && // LEGACY-ROOT
+            !string.Equals(Path.GetFullPath(legacy).TrimEnd('\\', '/'), Path.GetFullPath(Root).TrimEnd('\\', '/'), StringComparison.OrdinalIgnoreCase))
+            yield return legacy; // LEGACY-ROOT
+    }
+
+    /// <summary>
+    /// The set folder <paramref name="dirOrId"/> names: an existing folder as is, else a set ID (its folder name)
+    /// found under any repo of the root, or of the legacy root while that is read. Unknown names come back unchanged.
+    /// </summary>
+    public string Resolve(string dirOrId)
+    {
+        if (Directory.Exists(dirOrId)) return Path.GetFullPath(dirOrId);
+        if (dirOrId.IndexOfAny(['\\', '/', ':']) >= 0) return dirOrId;
+        foreach (var root in ReadRoots().Where(Directory.Exists))
+            foreach (var repoDir in Directory.EnumerateDirectories(root))
+                if (Path.Combine(repoDir, dirOrId) is var dir && Directory.Exists(dir)) return dir;
+        return dirOrId;
+    }
+
     /// <summary>Makes a new, empty set and writes its manifest.</summary>
     /// <param name="title">What it shows; also its folder's slug.</param>
     /// <param name="ticket">The ticket it is for.</param>
@@ -100,19 +133,25 @@ public sealed class PreviewSetStore
         return set;
     }
 
-    /// <summary>Sets under the root, newest first: one repo's, or every repo's.</summary>
+    /// <summary>Sets under the root (and the legacy root while it is read), newest first: one repo's, or every repo's.
+    /// A set in both roots is listed once, from the root.</summary>
     public IReadOnlyList<PreviewSet> List(string? repo = null, int? limit = null)
     {
-        var repoDirs = string.IsNullOrWhiteSpace(repo) ? Directory.EnumerateDirectories(Root)
-            : [Path.Combine(Root, OutputManager.Sanitize(repo!))];
         var sets = new List<PreviewSet>();
-        foreach (var repoDir in repoDirs.Where(Directory.Exists))
+        var seen = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        foreach (var root in ReadRoots())
         {
-            foreach (var dir in Directory.EnumerateDirectories(repoDir))
+            var repoDirs = string.IsNullOrWhiteSpace(repo) ? Directory.EnumerateDirectories(root)
+                : [Path.Combine(root, OutputManager.Sanitize(repo!))];
+            foreach (var repoDir in repoDirs.Where(Directory.Exists))
             {
-                if (ReadManifest(dir) is not { } set) continue;
-                set.Directory = dir;
-                sets.Add(set);
+                foreach (var dir in Directory.EnumerateDirectories(repoDir))
+                {
+                    if (!seen.Add(Path.Combine(Path.GetFileName(repoDir), Path.GetFileName(dir)))) continue;
+                    if (ReadManifest(dir) is not { } set) continue;
+                    set.Directory = dir;
+                    sets.Add(set);
+                }
             }
         }
         IEnumerable<PreviewSet> ordered = sets.OrderByDescending(s => s.Created);

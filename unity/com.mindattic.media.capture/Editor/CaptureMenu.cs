@@ -78,8 +78,19 @@ namespace MindAttic.Media.Capture.Unity.Editor
             var options = new CaptureOptions();
             var root = Directory.Exists(Path.GetPathRoot(options.OutputRoot) ?? "") ? options.OutputRoot : options.FallbackRoot;
             var project = Path.GetDirectoryName(Application.dataPath);
-            var app = Path.Combine(root, CaptureNaming.RepoName(project) ?? Path.GetFileName(project));
-            return Directory.Exists(app) ? app : root;
+            var repo = CaptureNaming.RepoName(project) ?? Path.GetFileName(project);
+            var app = Path.Combine(root, repo);
+            if (Directory.Exists(app)) return app;
+            if (string.Equals(options.OutputRoot, DefaultOutputRoot, StringComparison.OrdinalIgnoreCase)) // LEGACY-ROOT
+            {
+                var legacy = Path.Combine(LegacyOutputRoot, repo); // LEGACY-ROOT
+                if (Directory.Exists(legacy)) return legacy; // LEGACY-ROOT
+            }
+            return root;
         }
+
+        // The Unity plugin DLL can predate CaptureOptions.DefaultOutputRoot/LegacyOutputRoot, so they are repeated here.
+        private const string DefaultOutputRoot = @"R:\MindAttic\Media\Capture";
+        private const string LegacyOutputRoot = @"R:\MindAttic\Capture"; // LEGACY-ROOT
     }
 }
