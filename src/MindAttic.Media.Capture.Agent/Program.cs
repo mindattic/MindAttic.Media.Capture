@@ -84,7 +84,7 @@ namespace MindAttic.Media.Capture.Agent
                   capture gif <folder> [--fps 2|4] [--width 1280] [--output file.gif]   stitch a folder's PNGs into a timelapse GIF
                   capture mcp                              stdio MCP server: preview_new_set, capture_web, capture_screen,
                                                             add_file, show, list_sets
-                  capture host   --hwnd 0x.. --pid N --app Name [--version V] [--defaults capture.json] --cmdline "..."
+                  capture host   (--hwnd 0x.. | --frames {GUID}) --pid N --app Name [--version V] [--defaults capture.json] --cmdline "..."
                                                            capture an engine game (Unreal) for it: JSON lines on stdin/stdout
                                                            (docs/design/engine-host.md)
                   capture recover [root]                   export sessions left behind by crashed apps

@@ -4,11 +4,12 @@ using System.Text;
 using System.Text.Json;
 using MindAttic.Media.Capture.Hosting;
 using MindAttic.Media.Capture.Windows;
+using MindAttic.Media.Capture.Windows.Frames;
 
 namespace MindAttic.Media.Capture.Agent;
 
 /// <summary>
-/// <c>capture host --hwnd 0x.. --pid N --app Name [--version V] [--defaults path.json] --cmdline "..."</c>: captures an
+/// <c>capture host (--hwnd 0x.. | --frames {GUID}) --pid N --app Name [--version V] [--defaults path.json] --cmdline "..."</c>: captures an
 /// engine game that cannot load .NET (Unreal), the way CaptureUnity does inside a Unity player. Builds the options from the
 /// game's own command line, starts an engine on its window, then reads one JSON request per stdin line and writes one JSON
 /// reply or notice per stdout line (docs/design/engine-host.md). Stops and exports on <c>{"op":"quit"}</c>, stdin EOF, or
@@ -35,24 +36,37 @@ internal sealed class HostCommand(TextWriter output)
             Send(new { op = "ready", any = false });
             return 0;
         }
-        if (!args.Has("hwnd")) throw new CaptureException(CaptureError.InvalidArgument, "host needs --hwnd.");
-        var target = args.Target();
+        // --frames {GUID}: the game's own frames from its shared-memory ring (it has no window under -RenderOffScreen).
+        var framesName = args.Get("frames");
+        if (framesName == null && !args.Has("hwnd")) throw new CaptureException(CaptureError.InvalidArgument, "host needs --hwnd or --frames.");
 
         CaptureEngine engine;
+        FrameRingSource? ring = null;
         try
         {
-            engine = await CaptureEngine.StartNewAsync(new DesktopCaptureHost(target, args.HostOptions()), options);
+            ICaptureHost host;
+            if (framesName != null)
+            {
+                ring = FrameRingSource.Open(framesName);
+                host = new FrameRingCaptureHost(ring);
+                log.Log(CaptureLogLevel.Info, $"Recording the game's frames ({ring.Width}x{ring.Height}, frame feed {framesName}).");
+            }
+            else host = new DesktopCaptureHost(args.Target(), args.HostOptions());
+            engine = await CaptureEngine.StartNewAsync(host, options);
         }
         catch (CaptureException ex)
         {
+            ring?.Dispose();
             Send(new { op = "ready", any = true, enabled = false, error = ex.Message });
             return (int)ex.Error;
         }
 
+        using var ringLifetime = ring;
         await using (engine)
         {
+            // fps: the rate a frame ring is read back at (the game reads back nothing for a window).
             Send(new { op = "ready", any = true, enabled = engine.Enabled, folder = engine.SessionFolder, session = engine.SessionId,
-                fps = options.Fps, source = "window" });
+                fps = options.Fps, source = ring != null ? "frames" : "window" });
             var stop = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
             if (args.GetInt("pid") is { } pid) WatchProcess(pid, stop);
             _ = Task.Run(async () =>
