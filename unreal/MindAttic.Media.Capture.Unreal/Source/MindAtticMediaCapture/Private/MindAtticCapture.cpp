@@ -1,5 +1,6 @@
 #include "MindAtticCapture.h"
 
+#include "FrameFeed.h"
 #include "MindAtticCaptureAgentLocator.h"
 #include "MindAtticCaptureSettings.h"
 #include "MindAtticMediaCaptureModule.h"
@@ -137,6 +138,10 @@ namespace MindAttic::Media::Capture
 				msg->TryGetBoolField(TEXT("any"), s.IsAny);
 				msg->TryGetBoolField(TEXT("enabled"), s.IsEnabled);
 				msg->TryGetStringField(TEXT("folder"), s.Folder);
+				// Recording the game's own frames: read them back at the host's capture rate.
+				int32 fps = 0;
+				if (s.IsEnabled && msg->TryGetNumberField(TEXT("fps"), fps)) FrameFeed::Start(fps);
+				else FrameFeed::Close();
 				FString error;
 				if (msg->TryGetStringField(TEXT("error"), error) && !error.IsEmpty())
 					UE_LOG(LogMindAtticCapture, Error, TEXT("[MindAttic.Media.Capture] Capture disabled: %s"), *error);
@@ -197,7 +202,7 @@ namespace MindAttic::Media::Capture
 			}
 		}
 
-		/// `source`: what the host records, "--hwnd 0x..." for the game window (the frame feed adds its own source).
+		/// `source`: what the host records, "--hwnd 0x..." for the game window or "--frames {GUID}" for the frame feed.
 		void Start(const FString& source)
 		{
 			State& s = S();
@@ -291,14 +296,27 @@ namespace MindAttic::Media::Capture
 	void Tick()
 	{
 		State& s = S();
+		FrameFeed::TickStats();
 		if (s.ShutDown || !Requested()) return;
 		if (!s.Tried)
 		{
-			void* hwnd = GameWindowHandle();
-			if (!hwnd) return; // the game window isn't up yet
-			Start(FString::Printf(TEXT("--hwnd 0x%llx"), static_cast<unsigned long long>(reinterpret_cast<UPTRINT>(hwnd))));
+			// Under -RenderOffScreen (no window) or -capture-source=frames, the game's own frames.
+			if (FrameFeed::Wanted())
+			{
+				FString frames;
+				if (!FrameFeed::Open(frames)) return; // the game viewport isn't up yet
+				Start(FString::Printf(TEXT("--frames %s"), *frames));
+				if (!s.Proc.IsValid()) FrameFeed::Close();
+			}
+			else
+			{
+				void* hwnd = GameWindowHandle();
+				if (!hwnd) return; // the game window isn't up yet
+				Start(FString::Printf(TEXT("--hwnd 0x%llx"), static_cast<unsigned long long>(reinterpret_cast<UPTRINT>(hwnd))));
+			}
 		}
 		Pump();
+		FrameFeed::Tick();
 	}
 
 	bool Ready() { return !Requested() || S().IsReady; }
@@ -376,5 +394,6 @@ namespace MindAttic::Media::Capture
 		if (s.StdoutRead) FPlatformProcess::ClosePipe(s.StdoutRead, nullptr);
 		s.StdinWrite = s.StdoutRead = nullptr;
 		if (s.Proc.IsValid()) FPlatformProcess::CloseProc(s.Proc);
+		FrameFeed::Close();
 	}
 }

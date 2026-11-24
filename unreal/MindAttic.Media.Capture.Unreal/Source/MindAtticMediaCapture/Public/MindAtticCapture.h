@@ -1,7 +1,8 @@
 #pragma once
 
 // MindAttic.Media.Capture for Unreal games: what the Unity package's CaptureUnity is to a Unity player. C++ can't load
-// .NET, so on -capture the game starts the installed agent's `capture host`, hands it its window and its command line,
+// .NET, so on -capture the game starts the installed agent's `capture host`, hands it its window (or, under
+// -RenderOffScreen or -capture-source=frames, its own frames through a shared-memory ring) and its command line,
 // and drives it over a pipe: one JSON request a line on its stdin, one JSON reply or notice a line from its stdout
 // (docs/design/engine-host.md). Off unless -capture is on the command line; -capture video / screen N /
 // -capture-config path.json; output in R:\MindAttic\Capture\<AppName>\. The module ticks this itself and shuts it
@@ -30,7 +31,8 @@ namespace MindAttic::Media::Capture
 	/// -capture (or -capture=...) is on the command line. Whether a mode was asked for is the host's to say (Any).
 	MINDATTICMEDIACAPTURE_API bool Requested();
 
-	/// Once a frame (the module's core ticker): starts the host when the game window exists and reads its replies.
+	/// Once a frame (the module's core ticker): starts the host when the game window (or viewport, for the frame feed)
+	/// exists, reads its replies and feeds it frames when due.
 	MINDATTICMEDIACAPTURE_API void Tick();
 
 	/// The host has answered (started, or said why not): Any and Enabled are known.

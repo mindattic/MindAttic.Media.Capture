@@ -18,6 +18,8 @@ public class MindAtticMediaCapture : ModuleRules
 			"Slate",
 			"SlateCore",
 			"ApplicationCore",
+			"RenderCore",
+			"RHI",
 		});
 
 		// The agent locator reads capture.exe's ProductName (GetFileVersionInfo).
