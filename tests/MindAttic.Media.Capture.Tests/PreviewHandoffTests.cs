@@ -18,6 +18,13 @@ public class PreviewHandoffTests
     }
 
     [Test]
+    public void Store_DefaultsToTheMediaPreviewRoot()
+    {
+        Assert.That(PreviewSetStore.DefaultRoot, Is.EqualTo(@"R:\MindAttic\Media\Preview"));
+        Assert.That(PreviewSetStore.LegacyRoot, Is.EqualTo(@"R:\MindAttic\Preview"));
+    }
+
+    [Test]
     public void ToArgs_SkipsAnEmptySelect() =>
         Assert.That(new PreviewRequest(@"C:\s", "").ToArgs(), Is.EqualTo(new[] { @"C:\s" }));
 }

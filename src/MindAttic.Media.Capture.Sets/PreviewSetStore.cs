@@ -26,7 +26,10 @@ public enum ImportMode
 public sealed class PreviewSetStore
 {
     /// <summary>Where sets live by default.</summary>
-    public const string DefaultRoot = @"R:\MindAttic\Preview";
+    public const string DefaultRoot = @"R:\MindAttic\Media\Preview";
+
+    /// <summary>The sets root before previews moved under R:\MindAttic\Media.</summary>
+    public const string LegacyRoot = @"R:\MindAttic\Preview"; // LEGACY-ROOT
 
     /// <summary>Used when <see cref="DefaultRoot"/>'s drive is missing.</summary>
     public static string FallbackRoot { get; } =

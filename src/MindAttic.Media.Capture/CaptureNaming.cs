@@ -2,7 +2,7 @@ using System.Globalization;
 
 namespace MindAttic.Media.Capture;
 
-/// <summary>Output naming: R:\MindAttic\Capture\{RepoName}\{timestamp}_{RepoName}\{timestamp}_{RepoName}_{Kind}.{ext}.</summary>
+/// <summary>Output naming: R:\MindAttic\Media\Capture\{RepoName}\{timestamp}_{RepoName}\{timestamp}_{RepoName}_{Kind}.{ext}.</summary>
 public static class CaptureNaming
 {
     /// <summary>

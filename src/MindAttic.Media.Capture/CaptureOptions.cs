@@ -11,8 +11,14 @@ public sealed class CaptureOptions
     /// <summary>Global kill switch. When false every API call logs a warning and does nothing.</summary>
     public bool Enabled { get; set; } = true;
 
+    /// <summary>The engine's default <see cref="OutputRoot"/>.</summary>
+    public const string DefaultOutputRoot = @"R:\MindAttic\Media\Capture";
+
+    /// <summary>The output root before captures moved under R:\MindAttic\Media.</summary>
+    public const string LegacyOutputRoot = @"R:\MindAttic\Capture"; // LEGACY-ROOT
+
     /// <summary>Where captures go. A missing drive falls back to <see cref="FallbackRoot"/> with a warning.</summary>
-    public string OutputRoot { get; set; } = @"R:\MindAttic\Capture";
+    public string OutputRoot { get; set; } = DefaultOutputRoot;
 
     /// <summary>Used when <see cref="OutputRoot"/>'s drive is unavailable.</summary>
     public string FallbackRoot { get; set; } =

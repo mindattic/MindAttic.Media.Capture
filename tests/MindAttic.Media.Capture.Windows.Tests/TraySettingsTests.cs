@@ -211,9 +211,9 @@ public class TraySettingsTests
     [Test]
     public void A_failed_capture_points_at_the_session_log()
     {
-        var (title, text) = CaptureReport.Describe(new CaptureResult { Kind = CaptureKind.Recording, Error = "ffmpeg exited 1" }, @"R:\MindAttic\Capture\Desktop");
+        var (title, text) = CaptureReport.Describe(new CaptureResult { Kind = CaptureKind.Recording, Error = "ffmpeg exited 1" }, @"R:\MindAttic\Media\Capture\Desktop");
         Assert.That(title, Is.EqualTo("Capture failed"));
-        Assert.That(text, Does.StartWith("ffmpeg exited 1").And.Contain(@"the .log in R:\MindAttic\Capture\Desktop"));
+        Assert.That(text, Does.StartWith("ffmpeg exited 1").And.Contain(@"the .log in R:\MindAttic\Media\Capture\Desktop"));
     }
 
     [TestCase(System.Windows.Forms.Keys.R | System.Windows.Forms.Keys.Control | System.Windows.Forms.Keys.Alt | System.Windows.Forms.Keys.Shift, "Ctrl+Alt+Shift+R")]

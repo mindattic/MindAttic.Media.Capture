@@ -82,9 +82,9 @@ internal sealed class TraySettings
     [Setting("Screenshot", Group = "Hotkeys", Order = 2, Help = "Takes a screenshot of the armed target, e.g. Ctrl+Alt+Shift+S.")]
     public string ScreenshotHotkey { get; set; } = "Ctrl+Alt+Shift+S";
 
-    /// <summary>Where captures go; empty uses capture.json's outputRoot or the engine default (R:\MindAttic\Capture).</summary>
+    /// <summary>Where captures go; empty uses capture.json's outputRoot or the engine default (R:\MindAttic\Media\Capture).</summary>
     [Setting("Save captures to", Group = "Output", Order = 1,
-        Help = "Folder for recordings and screenshots. Empty uses capture.json's outputRoot, or R:\\MindAttic\\Capture.")]
+        Help = "Folder for recordings and screenshots. Empty uses capture.json's outputRoot, or R:\\MindAttic\\Media\\Capture.")]
     [PathPicker(PathKind.Folder)]
     public string? OutputRoot { get; set; }
 

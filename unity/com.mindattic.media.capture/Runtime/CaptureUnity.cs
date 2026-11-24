@@ -17,7 +17,7 @@ namespace MindAttic.Media.Capture.Unity
     /// <item>Production builds ignore all of it: capture runs in the editor, development builds, and builds made with the
     /// MINDATTIC_CAPTURE define (MindAttic ▸ Capture ▸ Build Windows Player (Capture Enabled)).</item>
     /// </list>
-    /// Output: R:\MindAttic\Capture\{RepoName}\{RepoName}_{timestamp}.{ext}, e.g. UnitySolarSystem_2026-10-11T14.29.20.123.png (falls back to Videos\MindAttic\Capture). Needs ffmpeg on PATH for video.
+    /// Output: R:\MindAttic\Media\Capture\{RepoName}\{RepoName}_{timestamp}.{ext}, e.g. UnitySolarSystem_2026-10-11T14.29.20.123.png (falls back to Videos\MindAttic\Capture). Needs ffmpeg on PATH for video.
     /// </summary>
     public static class CaptureUnity
     {

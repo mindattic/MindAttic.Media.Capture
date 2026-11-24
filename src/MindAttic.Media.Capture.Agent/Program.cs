@@ -93,7 +93,7 @@ namespace MindAttic.Media.Capture.Agent
 
                 target:  --self | --monitor N | --region x,y,w,h | --window "title" | --hwnd 0x1234 | --process name
                          --self: the window hosting this CLI (the app embedding it, or the terminal when run solo)
-                common:  --out R:\MindAttic\Capture  --app Name  --config capture.json  --fps 60  --hq|--lossless
+                common:  --out R:\MindAttic\Media\Capture  --app Name  --config capture.json  --fps 60  --hq|--lossless
                          --audio app|mic  --gdi  --no-wgc  --ffmpeg path  --verbose
                          --set <dir>: shot/record into a preview set as its next NNN_tag  [--caption C]
                 """);

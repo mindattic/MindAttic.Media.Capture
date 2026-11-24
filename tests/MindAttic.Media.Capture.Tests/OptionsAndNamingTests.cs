@@ -183,7 +183,9 @@ public class OutputManagerTests
         var bin = Directory.CreateDirectory(Path.Combine(repo, "src", "App", "bin", "Debug")).FullName;
         Assert.That(CaptureNaming.RepoName(bin), Is.EqualTo("GridGame2026"));
         Assert.That(CaptureNaming.RepoName(Path.GetTempPath()), Is.Null.Or.Not.EqualTo("GridGame2026"));
-        Assert.That(new CaptureOptions().OutputRoot, Is.EqualTo(@"R:\MindAttic\Capture"));
+        Assert.That(new CaptureOptions().OutputRoot, Is.EqualTo(@"R:\MindAttic\Media\Capture"));
+        Assert.That(CaptureOptions.DefaultOutputRoot, Is.EqualTo(@"R:\MindAttic\Media\Capture"));
+        Assert.That(CaptureOptions.LegacyOutputRoot, Is.EqualTo(@"R:\MindAttic\Capture"));
     }
 
     [Test]
