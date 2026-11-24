@@ -5,7 +5,7 @@
     <TargetFrameworks>netstandard2.1;net10.0</TargetFrameworks>
     <PackageId>MindAttic.Capture</PackageId>
     <!-- HOUSE-LAW-1: whole-number versions only; bump the major. -->
-    <Version>1.0.0</Version>
+    <Version>2.0.0</Version>
     <Description>Programmatic video capture and screenshots for games and apps: event triggers, rolling replay, session recording, sidecar metadata. Host-agnostic core.</Description>
     <PackageTags>capture;recording;screenshot;replay;ffmpeg;unity;wpf;webview2</PackageTags>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>

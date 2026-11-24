@@ -1,0 +1,17 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <PackageId>MindAttic.Capture.Sets</PackageId>
+    <!-- HOUSE-LAW-1: whole-number versions only; bump the major. -->
+    <Version>1.0.0</Version>
+    <Description>Preview sets: one folder of numbered media plus preview.json (mindattic.preview/1) that agents write and MindAttic.MediaViewer shows. Store, media kinds and the viewer handoff.</Description>
+    <PackageTags>capture;preview;media;viewer</PackageTags>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\MindAttic.Capture\MindAttic.Capture.csproj" />
+  </ItemGroup>
+
+</Project>

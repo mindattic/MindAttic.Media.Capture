@@ -1,6 +1,7 @@
 ﻿<Solution>
   <Folder Name="/src/">
     <Project Path="src/MindAttic.Capture/MindAttic.Capture.csproj" />
+    <Project Path="src/MindAttic.Capture.Sets/MindAttic.Capture.Sets.csproj" />
     <Project Path="src/MindAttic.Capture.Windows/MindAttic.Capture.Windows.csproj" />
     <Project Path="src/MindAttic.Capture.Agent/MindAttic.Capture.Agent.csproj" />
     <Project Path="src/MindAttic.Capture.Tray/MindAttic.Capture.Tray.csproj" />

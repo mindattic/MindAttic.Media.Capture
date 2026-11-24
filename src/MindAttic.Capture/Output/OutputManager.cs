@@ -5,44 +5,72 @@ using MindAttic.Capture.Tape;
 
 namespace MindAttic.Capture.Output;
 
-/// <summary>Per-file sidecar (<c>file.ext.json</c>).</summary>
-internal sealed class CaptureSidecar
+/// <summary>Per-file sidecar (<c>file.ext.json</c>), serialized camelCase by <see cref="ICaptureJson"/>.</summary>
+public sealed class CaptureSidecar
 {
+    /// <summary>Screenshot, Clip, Replay, Recording or Session.</summary>
     public string Kind { get; set; } = "";
+    /// <summary>The caller's tag (also in the file name).</summary>
     public string Tag { get; set; } = "";
+    /// <summary>The app the capture belongs to.</summary>
     public string App { get; set; } = "";
+    /// <summary>The app's version, when known.</summary>
     public string? AppVersion { get; set; }
+    /// <summary>The session id (its start timestamp).</summary>
     public string Session { get; set; } = "";
+    /// <summary>What captured it: desktop, wpf, webview2, unity, playwright...</summary>
     public string Host { get; set; } = "";
+    /// <summary>The machine it was captured on.</summary>
     public string Machine { get; set; } = Environment.MachineName;
+    /// <summary>When it was captured.</summary>
     public DateTimeOffset Timestamp { get; set; }
+    /// <summary>The event or rule that triggered it.</summary>
     public string? Trigger { get; set; }
+    /// <summary>Clip length; 0 for a still.</summary>
     public double DurationSeconds { get; set; }
+    /// <summary>Clip start on the session tape, in seconds.</summary>
     public double? TapeStart { get; set; }
+    /// <summary>Clip end on the session tape, in seconds.</summary>
     public double? TapeEnd { get; set; }
+    /// <summary>Width in pixels.</summary>
     public int? Width { get; set; }
+    /// <summary>Height in pixels.</summary>
     public int? Height { get; set; }
+    /// <summary>The encoding preset.</summary>
     public string? Preset { get; set; }
+    /// <summary>The video encoder used.</summary>
     public string? Encoder { get; set; }
+    /// <summary>Every file this capture produced (full paths).</summary>
     public List<string> Files { get; set; } = [];
+    /// <summary>Markers inside the clip.</summary>
     public List<SidecarMarker> Markers { get; set; } = [];
+    /// <summary>Extra data the caller attached.</summary>
     public Dictionary<string, object?>? Data { get; set; }
 }
 
-internal sealed class SidecarMarker
+/// <summary>A marker inside a sidecar's clip, at an offset from the clip's start.</summary>
+public sealed class SidecarMarker
 {
+    /// <summary>The marker's name.</summary>
     public string Name { get; set; } = "";
+    /// <summary>Seconds from the clip's start.</summary>
     public double OffsetSeconds { get; set; }
+    /// <summary>Extra data the caller attached.</summary>
     public Dictionary<string, object?>? Data { get; set; }
 }
 
 /// <summary>{session start}.session.json: everything that happened in one app run.</summary>
 internal sealed class SessionManifest
 {
+    /// <summary>The app the capture belongs to.</summary>
     public string App { get; set; } = "";
+    /// <summary>The app's version, when known.</summary>
     public string? AppVersion { get; set; }
+    /// <summary>The session id (its start timestamp).</summary>
     public string Session { get; set; } = "";
+    /// <summary>What captured it: desktop, wpf, webview2, unity, playwright...</summary>
     public string Host { get; set; } = "";
+    /// <summary>The machine it was captured on.</summary>
     public string Machine { get; set; } = Environment.MachineName;
     public DateTimeOffset Started { get; set; }
     public DateTimeOffset? Ended { get; set; }
@@ -50,6 +78,7 @@ internal sealed class SessionManifest
     public bool SessionRecording { get; set; }
     public string? TapeQuality { get; set; }
     public string? TapeSource { get; set; }
+    /// <summary>The video encoder used.</summary>
     public string? Encoder { get; set; }
     public List<ManifestEvent> Events { get; set; } = [];
     public int EventsDropped { get; set; }
@@ -68,19 +97,24 @@ internal sealed class ManifestEvent
 
 internal sealed class ManifestCapture
 {
+    /// <summary>Screenshot, Clip, Replay, Recording or Session.</summary>
     public string Kind { get; set; } = "";
+    /// <summary>The caller's tag (also in the file name).</summary>
     public string Tag { get; set; } = "";
     public DateTimeOffset At { get; set; }
+    /// <summary>Clip length; 0 for a still.</summary>
     public double DurationSeconds { get; set; }
+    /// <summary>The event or rule that triggered it.</summary>
     public string? Trigger { get; set; }
+    /// <summary>Every file this capture produced (full paths).</summary>
     public List<string> Files { get; set; } = [];
     public string? Error { get; set; }
 }
 
 /// <summary>Resolves the output root, owns the session folder, names files and writes sidecars and the manifest.</summary>
-internal sealed class OutputManager
+public sealed class OutputManager
 {
-    public const int MaxManifestEvents = 10_000;
+    internal const int MaxManifestEvents = 10_000;
 
     private readonly CaptureOptions _options;
     private readonly ICaptureJson _json;
@@ -96,7 +130,7 @@ internal sealed class OutputManager
     private long _baselineBytes = -1;
     private bool _diskWarned;
 
-    public OutputManager(CaptureOptions options, string host, ICaptureJson json, ICaptureLog log, Func<DateTimeOffset>? now = null)
+    internal OutputManager(CaptureOptions options, string host, ICaptureJson json, ICaptureLog log, Func<DateTimeOffset>? now = null)
     {
         _options = options;
         _json = json;
@@ -111,12 +145,12 @@ internal sealed class OutputManager
         };
     }
 
-    public string SessionId { get; }
-    public SessionManifest Manifest { get; }
-    public event Action<double>? DiskWarning;
+    internal string SessionId { get; }
+    internal SessionManifest Manifest { get; }
+    internal event Action<double>? DiskWarning;
 
     /// <summary>The configured root, or the fallback (with a warning) when its drive is missing.</summary>
-    public string Root
+    internal string Root
     {
         get
         {
@@ -130,7 +164,8 @@ internal sealed class OutputManager
         }
     }
 
-    internal static string ResolveRoot(string configured, string fallback, ICaptureLog log)
+    /// <summary>The configured root (created when missing), else the fallback with a warning; throws when neither can be used.</summary>
+    public static string ResolveRoot(string configured, string fallback, ICaptureLog log)
     {
         if (TryCreate(configured, out var error)) return Path.GetFullPath(configured);
         log.Warn($"Output root \"{configured}\" is unavailable ({error}); using \"{fallback}\".");
@@ -162,7 +197,7 @@ internal sealed class OutputManager
     }
 
     /// <summary>{root}\{app}\ — every session of this app gets its own folder underneath; created on first use.</summary>
-    public string AppDir
+    internal string AppDir
     {
         get
         {
@@ -176,10 +211,10 @@ internal sealed class OutputManager
     }
 
     /// <summary>{timestamp}_{app}: shared by the session folder and every file's name inside it.</summary>
-    public string SessionName => $"{SessionId}_{Sanitize(_options.AppName)}";
+    internal string SessionName => $"{SessionId}_{Sanitize(_options.AppName)}";
 
     /// <summary>{app folder}\{timestamp}_{app}\ — this run's own folder: its video, screenshots, log and manifest.</summary>
-    public string SessionDir
+    internal string SessionDir
     {
         get
         {
@@ -195,16 +230,16 @@ internal sealed class OutputManager
     }
 
     /// <summary>{session folder}\{timestamp}_{app}: the manifest ({stem}.session.json), log and stats.</summary>
-    public string SessionStem => Path.Combine(SessionDir, SessionName);
+    internal string SessionStem => Path.Combine(SessionDir, SessionName);
 
     /// <summary>{session folder}\{timestamp}_{app}_Video: the whole-session (or Start/StopRecording) export.</summary>
-    public string VideoStem => $"{SessionStem}_Video";
+    internal string VideoStem => $"{SessionStem}_Video";
 
     /// <summary>Tape segments live here: on the output volume so finalizing never copies across drives.</summary>
-    public string StagingDir => Path.Combine(Root, ".staging", SessionName);
+    internal string StagingDir => Path.Combine(Root, ".staging", SessionName);
 
     /// <summary>Full path without extension for the next capture, from the file template.</summary>
-    public string NextStem(CaptureKind kind, string tag)
+    internal string NextStem(CaptureKind kind, string tag)
     {
         var dir = SessionDir;
         lock (_gate)
@@ -250,6 +285,7 @@ internal sealed class OutputManager
         return s.Length == 0 ? "capture" : s;
     }
 
+    /// <summary>A file-name-safe form of <paramref name="value"/>: invalid characters and whitespace become '_', at most 120 characters.</summary>
     public static string Sanitize(string value)
     {
         var invalid = Path.GetInvalidFileNameChars();
@@ -259,7 +295,7 @@ internal sealed class OutputManager
         return s;
     }
 
-    public void WriteSidecar(string primaryFile, CaptureSidecar sidecar)
+    internal void WriteSidecar(string primaryFile, CaptureSidecar sidecar)
     {
         try
         {
@@ -271,7 +307,7 @@ internal sealed class OutputManager
         }
     }
 
-    public void AddEvent(ManifestEvent e)
+    internal void AddEvent(ManifestEvent e)
     {
         lock (_gate)
         {
@@ -280,17 +316,17 @@ internal sealed class OutputManager
         }
     }
 
-    public void AddMarker(MarkerRecord m)
+    internal void AddMarker(MarkerRecord m)
     {
         lock (_gate) Manifest.Markers.Add(m);
     }
 
-    public List<MarkerRecord> MarkersSnapshot()
+    internal List<MarkerRecord> MarkersSnapshot()
     {
         lock (_gate) return Manifest.Markers.ToList();
     }
 
-    public void AddCapture(CaptureResult r)
+    internal void AddCapture(CaptureResult r)
     {
         lock (_gate)
         {
@@ -304,7 +340,7 @@ internal sealed class OutputManager
         SaveManifest();
     }
 
-    public void SaveManifest()
+    internal void SaveManifest()
     {
         // Snapshot and write under one lock, so concurrent saves reach the file in snapshot order and never collide on it.
         lock (_manifestWriteGate)
