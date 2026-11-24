@@ -88,6 +88,7 @@ Game.exe -capture screen 5              # a PNG every 5 seconds until exit (also
 Game.exe -capture video screen 5        # both
 Game.exe -demo -capture video hq        # hardware HEVC tape (~0.2 GB/min) instead of lossless
 Game.exe -capture video 8h              # stop after 8 hours (the shut-off valve can stop it sooner)
+Game.exe -capture screen 15m 5h gif     # a PNG every 15 minutes for at most 5 hours, then a timelapse GIF
 Game.exe -capture                       # same as -capture video
 Game.exe -capture video -capture-config capture.json   # explicitly opt into settings/rules from a file
 ```
@@ -197,6 +198,11 @@ capture gif R:\MindAttic\Capture\Automata --fps 4 # stitch a folder's PNGs into 
 `capture gif <folder>` takes the folder's PNGs in name order and writes `{folder}\{folder name}.gif` (or
 `--output file.gif`) at `--fps` 2 or 4 (default 2), `--width` capped at 1280 by default, each frame stamped with its
 time and the last held 2 s. Code can call `CaptureEngine.ExportGifAsync(frames, fps)` directly.
+
+`gif` in the `-capture` flag (or `"gif": true` in capture.json, with `"gifFps"` and `"gifWidth"`) does the same for a
+session's interval screenshots when the session ends, early or not, writing `{RepoName}_{start}.gif` beside them.
+A session with fewer than 2 screenshots makes no GIF, and a GIF that fails is a warning in the session log, not a
+failed session.
 
 Targets: `--monitor N`, `--region x,y,w,h`, `--window "title"`, `--hwnd 0x1234`, `--process name`.
 

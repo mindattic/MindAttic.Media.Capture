@@ -37,6 +37,7 @@ public sealed class CaptureEngine : ICapture
     private readonly ConcurrentDictionary<string, byte> _warnedOnce = new();
     private Task? _eventWorker;
     private Task? _intervalLoop;
+    private readonly List<string> _gifFrames = [];
     private ResourceValve? _valve;
     private Task? _valveLoop;
     private CaptureTape? _tape;
@@ -287,7 +288,28 @@ public sealed class CaptureEngine : ICapture
             {
                 return;
             }
-            await ScreenshotCoreAsync("screen", new ScreenshotOptions(), null, null).ConfigureAwait(false);
+            var shot = await ScreenshotCoreAsync("screen", new ScreenshotOptions(), null, null).ConfigureAwait(false);
+            if (_options.SessionGif && shot.Succeeded) lock (_gifFrames) _gifFrames.AddRange(shot.Files);
+        }
+    }
+
+    /// <summary>Stitches the interval screenshots into {session}_{app}.gif; a failure is only a warning.</summary>
+    private async Task ExportSessionGifAsync()
+    {
+        string[] frames;
+        lock (_gifFrames) frames = _gifFrames.ToArray();
+        if (frames.Length < 2)
+        {
+            _log.Info($"No session GIF: it needs at least 2 screenshots and the session took {frames.Length}.");
+            return;
+        }
+        try
+        {
+            await ExportGifAsync(frames, _options.GifFps, _output.SessionStem + ".gif", _options.GifMaxWidth, _options.FfmpegPath, _log).ConfigureAwait(false);
+        }
+        catch (Exception ex)
+        {
+            _log.Warn("The session GIF could not be made; the screenshots are unaffected.", ex);
         }
     }
 
@@ -900,6 +922,7 @@ public sealed class CaptureEngine : ICapture
                 _log.Error($"The session export failed; the tape stays in {tape.Dir} for recovery.", ex);
             }
         }
+        if (_options.SessionGif && _intervalLoop is not null) await ExportSessionGifAsync().ConfigureAwait(false);
         _tapeGate.Dispose();
     }
 

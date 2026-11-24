@@ -56,6 +56,18 @@ public sealed class CaptureOptions
     /// <summary>Take a screenshot this often for as long as the engine runs (<c>-capture screen 5</c>).</summary>
     public TimeSpan? ScreenshotInterval { get; set; }
 
+    /// <summary>
+    /// Stitch the interval screenshots into {session}_{app}.gif beside them when the session ends, early or not
+    /// (<c>-capture screen 15m 5h gif</c>). Fewer than 2 shots make no GIF; a failed GIF is a warning, never a failed session.
+    /// </summary>
+    public bool SessionGif { get; set; }
+
+    /// <summary>Session GIF frame rate: 2 or 4.</summary>
+    public int GifFps { get; set; } = 2;
+
+    /// <summary>Session GIF width cap in pixels (aspect kept).</summary>
+    public int GifMaxWidth { get; set; } = 1280;
+
     /// <summary>Audio recorded with the tape.</summary>
     public AudioMode Audio { get; set; } = AudioMode.None;
 
@@ -99,6 +111,7 @@ public sealed class CaptureOptions
         if (args.Any) Enabled = true;
         if (args.Video) SessionRecording = true;
         if (args.ScreenInterval is { } interval) ScreenshotInterval = interval;
+        if (args.Gif) SessionGif = true;
         if (args.Quality is { } q) TapeQuality = q;
         if (args.MaxDuration is { } max) Limits.MaxDuration = max;
         return this;
@@ -133,6 +146,9 @@ public sealed class CaptureOptions
         if (!string.IsNullOrWhiteSpace(file.Ffmpeg)) FfmpegPath = file.Ffmpeg!;
         if (file.Fps is { } fps) Fps = fps;
         if (!string.IsNullOrWhiteSpace(file.ScreenshotEvery)) ScreenshotInterval = DurationText.Parse(file.ScreenshotEvery!);
+        if (file.Gif is { } gif) SessionGif = gif;
+        if (file.GifFps is { } gifFps) GifFps = gifFps;
+        if (file.GifWidth is { } gifWidth) GifMaxWidth = gifWidth;
         if (file.Video is true) SessionRecording = true;
         if (file.TapeQuality is { } tq) TapeQuality = tq;
         if (file.Audio is { } audio) Audio = audio;
@@ -159,6 +175,8 @@ public sealed class CaptureOptions
     {
         if (ScreenshotInterval is { } si && si < TimeSpan.FromMilliseconds(100))
             throw new CaptureException(CaptureError.InvalidArgument, $"ScreenshotInterval {si} is too short (minimum 100ms).");
+        if (GifFps is not (2 or 4)) throw new CaptureException(CaptureError.InvalidArgument, $"GifFps {GifFps} must be 2 or 4.");
+        if (GifMaxWidth < 2) throw new CaptureException(CaptureError.InvalidArgument, $"GifMaxWidth {GifMaxWidth} must be at least 2.");
         if (Fps is < 1 or > 240) throw new CaptureException(CaptureError.InvalidArgument, $"Fps {Fps} is out of range (1-240).");
         if (ReplayLength < TimeSpan.Zero || ReplayLength > TimeSpan.FromHours(1))
             throw new CaptureException(CaptureError.InvalidArgument, $"ReplayLength {ReplayLength} is out of range (0-1h).");
@@ -252,6 +270,12 @@ public sealed class CaptureConfigFile
     public bool? Video { get; set; }
     /// <summary>Screenshot interval, e.g. "5s" (same as <c>-capture screen 5</c>).</summary>
     public string? ScreenshotEvery { get; set; }
+    /// <summary>Stitch the screenshots into a GIF at session end (same as <c>-capture screen 15m gif</c>).</summary>
+    public bool? Gif { get; set; }
+    /// <summary>Session GIF frame rate, 2 or 4.</summary>
+    public int? GifFps { get; set; }
+    /// <summary>Session GIF width cap in pixels.</summary>
+    public int? GifWidth { get; set; }
     /// <summary>Tape encoding.</summary>
     public TapeQuality? TapeQuality { get; set; }
     /// <summary>Audio mode.</summary>
@@ -296,6 +320,7 @@ public sealed class PostCaptureConfig
 /// <item><c>-capture screen 5</c>: a PNG every 5 seconds (any duration: 500ms, 10s, 1m) for as long as the app runs.</item>
 /// <item><c>-capture video screen 5</c>: both. Add <c>hq</c> for a hardware-HEVC tape instead of lossless.</item>
 /// <item><c>-capture video 8h</c>: stop after 8 hours (resource limits can stop it sooner; see <see cref="CaptureLimits"/>).</item>
+/// <item><c>-capture screen 15m 5h gif</c>: a PNG every 15 minutes for at most 5 hours, stitched into a GIF when the session ends.</item>
 /// <item><c>-capture-config capture.json</c>: explicitly load settings and trigger rules from a file.</item>
 /// </list>
 /// </summary>
@@ -313,9 +338,11 @@ public sealed record CaptureArgs
     /// (a scripted tour, level checkpoints) may take over and clear <see cref="CaptureOptions.ScreenshotInterval"/>.
     /// </summary>
     public bool ScreenIntervalSpecified { get; init; }
+    /// <summary><c>gif</c>: stitch the screenshots into a GIF at session end (implies <c>screen</c>).</summary>
+    public bool Gif { get; init; }
     /// <summary>Tape quality (<c>hq</c> or <c>lossless</c>).</summary>
     public TapeQuality? Quality { get; init; }
-    /// <summary>A duration after <c>video</c> (<c>-capture video 8h</c>): stop capturing after this long.</summary>
+    /// <summary>A duration after <c>video</c> (<c>-capture video 8h</c>) or after the screen interval (<c>-capture screen 15m 5h</c>): stop capturing after this long.</summary>
     public TimeSpan? MaxDuration { get; init; }
     /// <summary><c>-capture-config path</c>.</summary>
     public string? ConfigPath { get; init; }
@@ -371,7 +398,7 @@ public sealed record CaptureArgs
         if (word.StartsWith("-", StringComparison.Ordinal) || word.StartsWith("/", StringComparison.Ordinal)) return false;
         if (word.IndexOfAny(['\\', '/', ':']) >= 0) return false;
         var w = word.Trim().ToLowerInvariant();
-        return w is "video" or "screen" or "screenshots" or "hq" or "lossless" || DurationText.TryParse(w, out _);
+        return w is "video" or "screen" or "screenshots" or "gif" or "hq" or "lossless" || DurationText.TryParse(w, out _);
     }
 
     private static CaptureArgs Apply(CaptureArgs result, IReadOnlyList<string> words)
@@ -381,6 +408,7 @@ public sealed record CaptureArgs
         var specified = result.ScreenIntervalSpecified;
         var quality = result.Quality;
         var maxDuration = result.MaxDuration;
+        var gif = result.Gif;
         for (var i = 0; i < words.Count; i++)
         {
             var w = words[i].Trim().ToLowerInvariant();
@@ -404,7 +432,16 @@ public sealed record CaptureArgs
                         screen = interval;
                         specified = true;
                         i++;
+                        if (i + 1 < words.Count && DurationText.TryParse(words[i + 1], out var screenMax))
+                        {
+                            if (screenMax <= TimeSpan.Zero) throw new CaptureException(CaptureError.InvalidArgument, $"-capture screen {words[i]} {words[i + 1]} must be positive.");
+                            maxDuration = screenMax;
+                            i++;
+                        }
                     }
+                    break;
+                case "gif":
+                    gif = true;
                     break;
                 case "hq" or "high" or "highquality":
                     quality = TapeQuality.HighQuality;
@@ -414,9 +451,10 @@ public sealed record CaptureArgs
                     break;
                 default:
                     throw new CaptureException(CaptureError.InvalidArgument,
-                        $"Unknown -capture option \"{words[i]}\" (use: video, screen [seconds], hq, lossless).");
+                        $"Unknown -capture option \"{words[i]}\" (use: video [max], screen [interval [max]], gif, hq, lossless).");
             }
         }
+        if (gif && screen is null && result.ScreenInterval is null) screen = DefaultScreenInterval;
         // Bare "-capture" (or only a quality word) means video.
         if (!video && screen is null) video = true;
         return result with
@@ -424,6 +462,7 @@ public sealed record CaptureArgs
             Video = result.Video || video,
             ScreenInterval = screen ?? result.ScreenInterval,
             ScreenIntervalSpecified = specified,
+            Gif = gif,
             Quality = quality,
             MaxDuration = maxDuration,
         };
