@@ -1,0 +1,25 @@
+{
+	"FileVersion": 3,
+	"Version": 1,
+	"VersionName": "0.1.0",
+	"FriendlyName": "MindAttic.Media.Capture.Unreal",
+	"Description": "MindAttic.Media.Capture for Unreal games: -capture video / screen N, events, markers and screenshots through the installed capture agent's `capture host`.",
+	"Category": "MindAttic",
+	"CreatedBy": "MindAttic",
+	"CreatedByURL": "https://mindattic.com",
+	"DocsURL": "",
+	"MarketplaceURL": "",
+	"SupportURL": "",
+	"CanContainContent": false,
+	"IsBetaVersion": true,
+	"Installed": false,
+	"Modules": [
+		{
+			"Name": "MindAtticMediaCapture",
+			"Type": "Runtime",
+			"LoadingPhase": "Default",
+			"PlatformAllowList": [ "Win64" ]
+		}
+	],
+	"SupportedTargetPlatforms": [ "Win64" ]
+}
