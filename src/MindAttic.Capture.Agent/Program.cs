@@ -42,6 +42,7 @@ namespace MindAttic.Capture.Agent
                     "serve" => await ServeAsync(args, log),
                     "set" => SetCommands.Run(args, log),
                     "web" => await WebCommand.RunAsync(args, log),
+                    "gif" => await GifCommand.RunAsync(args, log),
                     "mcp" => await McpCommand.RunAsync(args, log),
                     "raise" => await ApiClient.RaiseAsync(args),
                     "stop" => Signal(StopEventName, "stop"),
@@ -79,6 +80,7 @@ namespace MindAttic.Capture.Agent
                   capture set show <dir> [--select FILE] [--no-launch]   prints pipe|launched|photos|none
                   capture web <url> [--viewport WxH] [--device NAME] [--full-page] [--wait-for SEL] [--wait Ns]
                                    [--dark] [--fake-media] [--video Ns] [--set <dir>]   screenshot/record a page (Playwright, installed Edge)
+                  capture gif <folder> [--fps 2|4] [--width 1280] [--output file.gif]   stitch a folder's PNGs into a timelapse GIF
                   capture mcp                              stdio MCP server: preview_new_set, capture_web, capture_screen,
                                                             add_file, show, list_sets
                   capture recover [root]                   export sessions left behind by crashed apps

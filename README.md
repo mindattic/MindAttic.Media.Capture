@@ -191,7 +191,12 @@ capture replay --window "GridGame" --length 30s   # Enter or `capture save` save
 capture serve --window "Tutor"                    # localhost API for browser pages and scripts
 capture raise critical-hit damage=900              # send an event to `capture serve`
 capture recover R:\MindAttic\Capture             # export sessions left by crashed apps
+capture gif R:\MindAttic\Capture\Automata --fps 4 # stitch a folder's PNGs into a timelapse GIF
 ```
+
+`capture gif <folder>` takes the folder's PNGs in name order and writes `{folder}\{folder name}.gif` (or
+`--output file.gif`) at `--fps` 2 or 4 (default 2), `--width` capped at 1280 by default, each frame stamped with its
+time and the last held 2 s. Code can call `CaptureEngine.ExportGifAsync(frames, fps)` directly.
 
 Targets: `--monitor N`, `--region x,y,w,h`, `--window "title"`, `--hwnd 0x1234`, `--process name`.
 
