@@ -260,4 +260,52 @@ internal static class FfmpegArgs
         args.AddRange(["-y", output]);
         return args;
     }
+
+    /// <summary>Concat list for timelapse frames, each shown for one GIF frame (1/fps).</summary>
+    public static string GifConcatList(IReadOnlyList<string> frames, int fps)
+    {
+        var sb = new StringBuilder("ffconcat version 1.0\n");
+        foreach (var file in frames)
+            sb.Append("file '").Append(file.Replace("'", @"'\''")).Append("'\nduration ").Append(S(1.0 / fps)).Append('\n');
+        return sb.ToString();
+    }
+
+    /// <summary>sendcmd script that swaps the drawtext stamp to each frame's time as that frame starts.</summary>
+    public static string GifStampCommands(IReadOnlyList<DateTime> times, int fps)
+    {
+        var sb = new StringBuilder();
+        for (var i = 0; i < times.Count; i++)
+        {
+            var text = times[i].ToString("yyyy-MM-dd HH:mm:ss", CultureInfo.InvariantCulture).Replace(":", @"\:");
+            sb.Append(S((double)i / fps)).Append(" drawtext reinit 'text=").Append(text).Append("';\n");
+        }
+        return sb.ToString();
+    }
+
+    /// <summary>
+    /// Timelapse pass 1: every frame fitted into one even-sized canvas (letterboxed when its aspect differs)
+    /// and stamped with its time, written as a numbered PNG sequence. Frames may differ in size, so the
+    /// filter graph is rebuilt per size here, before any palette work.
+    /// </summary>
+    public static List<string> GifStampFrames(string concatList, string stampCommands, int width, int height, string? fontFile, string outputPattern)
+    {
+        var font = fontFile is null ? "" : $"fontfile={FilterPath(fontFile)}:";
+        var size = I(Math.Max(12, height / 36));
+        var vf = $"sendcmd=f={FilterPath(stampCommands)}," +
+                 $"scale={I(width)}:{I(height)}:force_original_aspect_ratio=decrease:flags=lanczos," +
+                 $"pad={I(width)}:{I(height)}:(ow-iw)/2:(oh-ih)/2,setsar=1," +
+                 $"drawtext={font}text='':x=w-tw-{size}/2:y=h-th-{size}/2:fontsize={size}:fontcolor=white:box=1:boxcolor=black@0.6:boxborderw=6";
+        return [.. Common, "-f", "concat", "-safe", "0", "-i", concatList, "-vf", vf, "-fps_mode", "passthrough", "-y", outputPattern];
+    }
+
+    /// <summary>Timelapse pass 2: the PNG sequence at <paramref name="fps"/>, last frame held, through a generated palette.</summary>
+    public static List<string> GifFromFrames(string inputPattern, int fps, double holdSeconds, string output) =>
+    [
+        .. Common, "-framerate", I(fps), "-i", inputPattern,
+        "-filter_complex", $"tpad=stop_mode=clone:stop_duration={S(holdSeconds)},split[a][b];[a]palettegen=stats_mode=diff[p];[b][p]paletteuse=dither=sierra2_4a",
+        "-loop", "0", "-y", output,
+    ];
+
+    /// <summary>A file path as a quoted filter option value (forward slashes, escaped colons).</summary>
+    private static string FilterPath(string path) => "'" + path.Replace('\\', '/').Replace(":", @"\:").Replace("'", @"'\''") + "'";
 }

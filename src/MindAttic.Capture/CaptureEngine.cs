@@ -104,6 +104,18 @@ public sealed class CaptureEngine : ICapture
 
     private string Ffmpeg => _ffmpeg ??= FfmpegLocator.Find(_options.FfmpegPath);
 
+    /// <summary>
+    /// Stitches screenshot PNGs, in the given order, into an animated GIF: a generated palette, <paramref name="fps"/>
+    /// frames a second (2 or 4), the last frame held 2s, at most <paramref name="maxWidth"/> pixels wide (aspect kept,
+    /// even sizes; frames of another size are letterboxed), each frame stamped with its file time. Missing frames are
+    /// skipped. <paramref name="output"/> defaults to {folder}\{folder name}.gif beside the first frame.
+    /// </summary>
+    /// <returns>The GIF's full path.</returns>
+    /// <exception cref="CaptureException">No usable frames, a bad argument, or ffmpeg missing or failing.</exception>
+    public static Task<string> ExportGifAsync(IReadOnlyList<string> frames, int fps = 2, string? output = null, int maxWidth = 1280,
+        string ffmpegPath = "ffmpeg", ICaptureLog? log = null, CancellationToken ct = default) =>
+        GifExporter.ExportAsync(FfmpegLocator.Find(ffmpegPath), frames, fps, output, maxWidth, log ?? new TraceCaptureLog(), ct);
+
     /// <summary>Validates options, loads rules, and starts the tape when session recording or the replay buffer is on.</summary>
     public async Task StartAsync(CancellationToken ct = default)
     {
