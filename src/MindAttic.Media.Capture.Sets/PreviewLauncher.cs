@@ -28,15 +28,12 @@ public sealed record PreviewRequest(string Set, string? Select = null)
 /// <summary>
 /// The Media.Viewer's own single-instance handoff (M.MVIEW-T7): the running Viewer listens on <see cref="PipeName"/>
 /// (this Windows user only) for a later launch's command line, one argument per UTF-8 line ended by an empty line, and
-/// shows it as if it had been launched with it. A Viewer from before the rename listens on <see cref="LegacyPipeName"/>.
+/// shows it as if it had been launched with it.
 /// </summary>
 public static class PreviewHandoff
 {
     /// <summary>The pipe the running Viewer listens on for this Windows user.</summary>
     public static string PipeName { get; } = "mindattic-media-viewer-cli-" + UserPart(Environment.UserName);
-
-    /// <summary>The pipe of the Viewer before its rename to MindAttic.Media.Viewer, still listened on for one release.</summary>
-    public static string LegacyPipeName { get; } = "mindattic-mediaviewer-cli-" + UserPart(Environment.UserName);
 
     /// <summary>What goes down the pipe for <paramref name="request"/>: each argument on its own line, then an empty line.</summary>
     public static string Payload(PreviewRequest request) =>
@@ -44,13 +41,11 @@ public static class PreviewHandoff
 
     /// <summary>
     /// Hands <paramref name="request"/> to the running Viewer on <paramref name="pipeName"/>, or else on
-    /// <see cref="PipeName"/> then <see cref="LegacyPipeName"/>. False when none answers within <paramref name="timeout"/>.
+    /// <see cref="PipeName"/>. False when none answers within <paramref name="timeout"/>.
     /// </summary>
-    public static bool Send(PreviewRequest request, TimeSpan timeout, string? pipeName = null) =>
-        pipeName is not null ? SendTo(pipeName, request, timeout) : SendTo(PipeName, request, timeout) || SendTo(LegacyPipeName, request, timeout);
-
-    private static bool SendTo(string pipeName, PreviewRequest request, TimeSpan timeout)
+    public static bool Send(PreviewRequest request, TimeSpan timeout, string? pipeName = null)
     {
+        pipeName ??= PipeName;
         try
         {
             using var pipe = new NamedPipeClientStream(".", pipeName, PipeDirection.Out, PipeOptions.CurrentUserOnly);
@@ -78,18 +73,9 @@ public static class PreviewLauncher
     /// <summary>Where run.ps1 deploys the Viewer.</summary>
     public const string DefaultViewerPath = @"C:\Apps\MindAttic.Media.Viewer\MindAttic.Media.Viewer.exe";
 
-    /// <summary>Where the Viewer was deployed before its rename to MindAttic.Media.Viewer.</summary>
-    public const string LegacyViewerPath = @"C:\Apps\MindAttic.MediaViewer\MindAttic.MediaViewer.exe";
-
-    /// <summary>
-    /// The Viewer exe: <c>MINDATTIC_MEDIA_VIEWER</c>, else <c>MINDATTIC_MEDIAVIEWER</c>, when set; else
-    /// <see cref="DefaultViewerPath"/>, or <see cref="LegacyViewerPath"/> when only that one is installed.
-    /// </summary>
+    /// <summary>The Viewer exe: <c>MINDATTIC_MEDIA_VIEWER</c> when set, else <see cref="DefaultViewerPath"/>.</summary>
     public static string ViewerPath =>
-        Environment.GetEnvironmentVariable("MINDATTIC_MEDIA_VIEWER") is { Length: > 0 } custom ? custom
-        : Environment.GetEnvironmentVariable("MINDATTIC_MEDIAVIEWER") is { Length: > 0 } legacy ? legacy
-        : !File.Exists(DefaultViewerPath) && File.Exists(LegacyViewerPath) ? LegacyViewerPath
-        : DefaultViewerPath;
+        Environment.GetEnvironmentVariable("MINDATTIC_MEDIA_VIEWER") is { Length: > 0 } custom ? custom : DefaultViewerPath;
 
     /// <summary>Shows <paramref name="setDir"/>, selecting <paramref name="select"/> (a file name in it) when given.</summary>
     public static PreviewShown Show(string setDir, string? select = null)
