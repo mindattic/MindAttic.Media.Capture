@@ -15,6 +15,8 @@ ported from.
                                                builds CaptureOptions as CaptureUnity does, starts CaptureEngine on
                               <── ready ────   the window (Windows Graphics Capture)
  raise / marker / screenshot / command ───>    engine.Raise / Marker / ScreenshotAsync / ExecuteCommandAsync
+ record-start/stop/pause/resume, clip,         StartRecordingAsync / StopRecordingAsync / Pause / Resume /
+   save-replay ───────────────────────────>    ClipAsync / SaveReplayAsync; a screenshot's "set" joins a preview set
  note (its own "[capture] ..." log lines) ─>   <session folder>.game.log
                      <── log, result ──────    engine log lines, screenshot results, rejected requests
  quit, stdin closed, or the game exits ───>    stops; the session export runs detached (capture finalize)
@@ -49,7 +51,13 @@ Game to host (stdin):
 |---|---|---|
 | `raise` | `event`, `data` | `Raise`: the capture.json rules see it, the manifest records it |
 | `marker` | `name`, `data` | a chapter in the exported video |
-| `screenshot` | `id`, `tag`, `data` | `ScreenshotAsync`; answered with a `result` of the same `id` once written |
+| `screenshot` | `id`, `tag`, `data`, `set`, `caption` | `ScreenshotAsync`; answered with a `result` of the same `id` once written. With `set` (a preview set folder, from `capture set new --json`'s `dir`), the shot and its sidecar are also copied into the set as its next `NNN_tag` with `caption`, and `files` names the set's copies; the session keeps its own |
+| `record-start` | `id`, `tag` (default `recording`), `data` | `StartRecordingAsync`; `result` `ok` once recording (error `Already recording.` when one runs) |
+| `record-stop` | `id` | `StopRecordingAsync`; `result` with the exported `files` once written |
+| `record-pause` | `id` | `PauseRecording`: footage from now until `record-resume` is left out; `result` `ok` |
+| `record-resume` | `id` | `ResumeRecording`; `result` `ok` |
+| `clip` | `id`, `before` (s, default 0, up to 3600), `after` (s, default 10, up to 600), `tag` (default `clip`), `data` | no `before`: `ClipAsync(after)`, footage from now; with `before`: `SaveReplayAsync(before, after)` (the past needs the replay ring); `result` once written |
+| `save-replay` | `id`, `before` (default the session's replay length), `after` (default 0), `tag` (default `replay`), `data` | `SaveReplayAsync`; `result` once written |
 | `command` | `command` | `ExecuteCommandAsync`: `screenshot`, `toggle-recording`, `save-replay` (Alt+F9/F10/F11) |
 | `note` | `text` | appends a timestamped line to `<session folder>.game.log` |
 | `quit` | | stop and export |
@@ -62,12 +70,15 @@ Host to game (stdout):
 | op | fields | when |
 |---|---|---|
 | `ready` | `any`, `enabled`, `folder`, `session`, `fps`, `source` (`window` or `frames`), or `error` | once, after start (`any` false: nothing started, the host exits) |
-| `result` | `id`, `ok`, `files`, `error` | a screenshot was written or failed; or a request was rejected (`ok` false, `error` says why, `id` when the request had one) |
+| `result` | `id`, `ok`, `files`, `error` | a screenshot, recording, clip or replay was written or failed, or a recording op took effect; or a request was rejected (`ok` false, `error` says why, `id` when the request had one) |
 | `log` | `level`, `message` | an engine log line at Info or above; the game writes it to its own log |
 | `stopped` | | the session stopped and its export was handed off; the host exits 0 |
 
 An unknown `op`, a line that is not a JSON object, or a request missing a required field is answered with an error
-`result`; the host keeps reading.
+`result`; the host keeps reading. So are `record-stop`, `record-pause` and `record-resume` while nothing is recording
+(`Not recording.`), and a `screenshot` whose `set` folder does not exist. A `clip` or `save-replay` the engine cannot
+cut (no tape running) is answered with the engine's error. Requests are answered in the order their captures finish,
+not the order sent: match replies by `id`.
 
 ## Frame feed
 

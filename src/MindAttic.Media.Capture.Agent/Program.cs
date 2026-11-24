@@ -85,8 +85,10 @@ namespace MindAttic.Media.Capture.Agent
                   capture mcp                              stdio MCP server: preview_new_set, capture_web, capture_screen,
                                                             add_file, show, list_sets
                   capture host   (--hwnd 0x.. | --frames {GUID}) --pid N --app Name [--version V] [--defaults capture.json] --cmdline "..."
-                                                           capture an engine game (Unreal) for it: JSON lines on stdin/stdout
-                                                           (docs/design/engine-host.md)
+                                                           capture an engine game (Unreal) for it: JSON lines on stdin/stdout;
+                                                           ops raise, marker, screenshot (+set, caption), record-start,
+                                                           record-stop, record-pause, record-resume, clip, save-replay,
+                                                           command, note, quit (docs/design/engine-host.md)
                   capture recover [root]                   export sessions left behind by crashed apps
 
                 target:  --self | --monitor N | --region x,y,w,h | --window "title" | --hwnd 0x1234 | --process name
