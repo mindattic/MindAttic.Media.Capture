@@ -22,8 +22,8 @@ Programmatic video capture and screenshots for MindAttic games and apps: trailer
 - Crash recovery: finished segments stay on disk and are exported on the next launch or by `capture recover`.
 
 ```text
- your app / game                     MindAttic.Media.Capture                         R:\MindAttic\Capture\
- ───────────────                     ───────────────────────                         ─────────────────────
+ your app / game                     MindAttic.Media.Capture                         R:\MindAttic\Media\Capture\
+ ───────────────                     ───────────────────────                         ───────────────────────────
  Capture.Raise("critical-hit") ──>  trigger rules ──> replay / clip / screenshot ──>  {RepoName}\{RepoName}_{timestamp}.{ext}
  -capture video / screen N     ──>  session tape (1 s segments, lossless FFV1)  ──>    {RepoName}_{start}.mkv + .mp4
  ScreenshotAsync / ClipAsync   ──>  host adapter (desktop, WPF, WebView2, Unity)       *.png  *.mp4  *.json sidecars
@@ -102,7 +102,7 @@ you have to pass it yourself.
 `-capture` followed by anything that isn't a capture word (for example an app's own `-capture <folder>`)
 is left alone. `-demo` and other flags belong to the app: capture only records what runs.
 
-When the app closes, the session goes to `R:\MindAttic\Capture\{RepoName}\{RepoName}_{session start}.mkv`
+When the app closes, the session goes to `R:\MindAttic\Media\Capture\{RepoName}\{RepoName}_{session start}.mkv`
 and `.mp4`, alongside every screenshot, clip and replay its events triggered. If `capture.exe` is
 installed, the export runs in a detached process so the app exits immediately. If the app
 crashes, a job object stops ffmpeg, the finished segments stay on disk, and the next launch (or
@@ -192,8 +192,8 @@ capture record --monitor 0 --duration 30s --preset devlog
 capture replay --window "GridGame" --length 30s   # Enter or `capture save` saves the last 30 s
 capture serve --window "Tutor"                    # localhost API for browser pages and scripts
 capture raise critical-hit damage=900              # send an event to `capture serve`
-capture recover R:\MindAttic\Capture             # export sessions left by crashed apps
-capture gif R:\MindAttic\Capture\Automata --fps 4 # stitch a folder's PNGs into a timelapse GIF
+capture recover R:\MindAttic\Media\Capture       # export sessions left by crashed apps
+capture gif R:\MindAttic\Media\Capture\Automata --fps 4 # stitch a folder's PNGs into a timelapse GIF
 ```
 
 `capture gif <folder>` takes the folder's PNGs in name order and writes `{folder}\{folder name}.gif` (or
@@ -264,7 +264,7 @@ Placed beside the exe (picked up automatically), or passed with `-capture-config
 
 A preview set is one folder of numbered media plus `preview.json` (schema `mindattic.preview/1`) that an agent
 fills and MindAttic.Media.Viewer shows; see [docs/design/preview-sets.md](docs/design/preview-sets.md). Sets live
-in `R:\MindAttic\Preview\{Repo}\{yyyy-MM-ddTHH.mm.ss}_{TICKET}_{slug}\` (`%USERPROFILE%\Pictures\MindAttic\Preview`
+in `R:\MindAttic\Media\Preview\{Repo}\{yyyy-MM-ddTHH.mm.ss}_{TICKET}_{slug}\` (`%USERPROFILE%\Pictures\MindAttic\Preview`
 when `R:` is missing) and hold `NNN_{tag}.{ext}` files with their sidecars.
 
 ```powershell
@@ -286,12 +286,12 @@ which; `--no-launch` only lists the items. The library behind it, `MindAttic.Med
 
 ## Output
 
-Everything goes to `R:\MindAttic\Capture\{RepoName}\`, one folder per app run. The session's timestamp is UTC,
+Everything goes to `R:\MindAttic\Media\Capture\{RepoName}\`, one folder per app run. The session's timestamp is UTC,
 ISO 8601 with `:` replaced by `.` (Windows file names cannot contain `:`), and every file inside starts with the
 same `{timestamp}_{RepoName}`, so a file copied elsewhere still says what it shows:
 
 ```
-R:\MindAttic\Capture\UnitySolarSystem\
+R:\MindAttic\Media\Capture\UnitySolarSystem\
   2026.10.11T14.38.02Z_UnitySolarSystem\                        one app run (session)
     2026.10.11T14.38.02Z_UnitySolarSystem.session.json           manifest: app, version, events, markers, captures, diagnostics
     2026.10.11T14.38.02Z_UnitySolarSystem.log / .stats.csv       the session's log and encoder stats
@@ -313,6 +313,15 @@ Each sidecar records:
 - your custom key/values
 
 Markers are also written into exported video as chapters.
+
+### Moved roots (2026-11)
+
+Captures moved from `R:\MindAttic\Capture` to `R:\MindAttic\Media\Capture`, and preview sets from
+`R:\MindAttic\Preview` to `R:\MindAttic\Media\Preview` (M.CAPT-T202). For one release the old roots are still read
+(`capture recover`, set listings and set lookups by id, the Unity Open Capture Folder) but never written
+(M.CAPT-T203). `capture migrate-roots` lists what would move;
+`capture migrate-roots --apply` moves it, never deleting or overwriting, and leaves a `README.md` in each old root
+(M.CAPT-T204). See [docs/MIGRATION.md](docs/MIGRATION.md#media-roots).
 
 ## Production builds
 
@@ -406,7 +415,6 @@ These names stay on purpose, so installed tools, scripts and saved output keep w
 
 - the `capture.exe` and `capture-tray.exe` executables, installed in `%LOCALAPPDATA%\MindAttic\Capture\bin`, with
   `tray.json` and `agent.json` beside them in `%LOCALAPPDATA%\MindAttic\Capture`;
-- the output root `R:\MindAttic\Capture`;
 - the `MINDATTIC_CAPTURE` define, the `MINDATTIC_CAPTURE_*` environment variables (`MINDATTIC_CAPTURE_AGENT`) and
   the `MindAtticCaptureStrip` MSBuild property;
 - the JavaScript bridge `window.mindattic.capture`;

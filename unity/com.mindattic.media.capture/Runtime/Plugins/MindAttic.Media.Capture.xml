@@ -121,7 +121,7 @@
             <summary>Hands a stopped session tape to the detached finalizer, or exports it in-process.</summary>
         </member>
         <member name="T:MindAttic.Media.Capture.CaptureNaming">
-            <summary>Output naming: R:\MindAttic\Capture\{RepoName}\{timestamp}_{RepoName}\{timestamp}_{RepoName}_{Kind}.{ext}.</summary>
+            <summary>Output naming: R:\MindAttic\Media\Capture\{RepoName}\{timestamp}_{RepoName}\{timestamp}_{RepoName}_{Kind}.{ext}.</summary>
         </member>
         <member name="M:MindAttic.Media.Capture.CaptureNaming.Timestamp(System.DateTimeOffset)">
             <summary>

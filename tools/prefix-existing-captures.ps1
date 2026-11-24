@@ -1,12 +1,12 @@
 # Renames captures made before file names carried the project name:
-#   R:\MindAttic\Capture\UnityEve\2026-10-11T14.58.34.885.mkv  ->  ...\UnityEve\UnityEve_2026-10-11T14.58.34.885.mkv
+#   R:\MindAttic\Media\Capture\UnityEve\2026-10-11T14.58.34.885.mkv  ->  ...\UnityEve\UnityEve_2026-10-11T14.58.34.885.mkv
 # and rewrites the file names inside the .session.json manifests and .json sidecars to match.
 # Only renames; never deletes. Files still being written (in use) are skipped, so it is safe to re-run.
 #
 #   .\prefix-existing-captures.ps1 -WhatIf     # list what would change
 #   .\prefix-existing-captures.ps1             # do it
 [CmdletBinding(SupportsShouldProcess)]
-param([string]$Root = 'R:\MindAttic\Capture')
+param([string]$Root = 'R:\MindAttic\Media\Capture')
 
 $utf8 = [System.Text.UTF8Encoding]::new($false)
 $total = 0; $skipped = 0

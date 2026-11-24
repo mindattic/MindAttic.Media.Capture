@@ -41,3 +41,29 @@ are in the README's [Formerly MindAttic.Capture](../README.md#formerly-mindattic
 Left after the sweep (M.CAPT-T181): SpaceGod.Unreal prose (US-T691) and Unity.SpaceGod's package reference
 (U.SPC-T643). Archived repos (the SpaceGod.Unity.CSharp, SpaceGod.Unreal.Cpp, SpaceGod.Unreal.CSharp and
 Unreal.SpaceGod candidates) and dated records keep the old name.
+
+## Media roots
+
+Since 2026-11 output lives under `R:\MindAttic\Media` (M.CAPT-T200):
+
+| What | Old root | New root |
+|---|---|---|
+| Captures and sessions | `R:\MindAttic\Capture\{RepoName}` | `R:\MindAttic\Media\Capture\{RepoName}` |
+| Preview sets | `R:\MindAttic\Preview\{Repo}` | `R:\MindAttic\Media\Preview\{Repo}` |
+
+New captures and sets go only to the new roots (M.CAPT-T202). For one release the old roots are still read as a
+fallback while the default root is in use: `capture recover`, `capture set list` and set lookups by id, and the
+Unity Open Capture Folder menu (M.CAPT-T203). A custom root never reads the old one.
+
+Move existing data with `capture migrate-roots` (M.CAPT-T204):
+
+```powershell
+capture migrate-roots            # dry run: lists what would move and what would stay
+capture migrate-roots --apply    # moves it and leaves a README.md in each old root saying where it went
+```
+
+It renames whole app folders when the target is missing and merges a level down when it exists; an item whose
+target exists, or that is locked, stays put and is listed. Nothing is deleted or overwritten, and old-root paths
+inside moved sidecars, session manifests and `tape.json` are rewritten. `--from-capture`, `--to-capture`,
+`--from-preview` and `--to-preview` point it at other folders. Run it again once nothing is recording to pick up
+what was skipped.
