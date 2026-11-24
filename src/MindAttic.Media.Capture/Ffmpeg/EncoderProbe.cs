@@ -1,7 +1,7 @@
 using System.Collections.Concurrent;
-using MindAttic.Capture.Hosting;
+using MindAttic.Media.Capture.Hosting;
 
-namespace MindAttic.Capture.Ffmpeg;
+namespace MindAttic.Media.Capture.Ffmpeg;
 
 /// <summary>The encoders this machine can actually use (hardware first, software fallback).</summary>
 internal sealed record EncoderSet(string H264, string Hevc)

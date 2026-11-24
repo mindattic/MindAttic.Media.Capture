@@ -1,8 +1,8 @@
-using MindAttic.Capture.Ffmpeg;
-using MindAttic.Capture.Hosting;
-using MindAttic.Capture.Tape;
+using MindAttic.Media.Capture.Ffmpeg;
+using MindAttic.Media.Capture.Hosting;
+using MindAttic.Media.Capture.Tape;
 
-namespace MindAttic.Capture.Output;
+namespace MindAttic.Media.Capture.Output;
 
 /// <summary>What to cut from a tape and what to produce.</summary>
 internal sealed record ExportJob(

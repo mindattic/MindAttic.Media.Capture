@@ -1,6 +1,6 @@
 using Vortice.DXGI;
 
-namespace MindAttic.Capture.Windows.Video;
+namespace MindAttic.Media.Capture.Windows.Video;
 
 internal static class DxgiOutputs
 {

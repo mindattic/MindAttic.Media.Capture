@@ -1,9 +1,9 @@
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
-using MindAttic.Capture.Hosting;
+using MindAttic.Media.Capture.Hosting;
 
-namespace MindAttic.Capture.Agent;
+namespace MindAttic.Media.Capture.Agent;
 
 /// <summary>
 /// <c>capture mcp</c>: the capture agent as a stdio MCP server, exposing preview_new_set, capture_web,

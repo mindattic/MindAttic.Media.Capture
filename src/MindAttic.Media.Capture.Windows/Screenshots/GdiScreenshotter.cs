@@ -1,10 +1,10 @@
 using System.Drawing;
 using System.Drawing.Imaging;
 using System.Runtime.InteropServices;
-using MindAttic.Capture.Hosting;
-using MindAttic.Capture.Windows.Native;
+using MindAttic.Media.Capture.Hosting;
+using MindAttic.Media.Capture.Windows.Native;
 
-namespace MindAttic.Capture.Windows.Screenshots;
+namespace MindAttic.Media.Capture.Windows.Screenshots;
 
 internal static class GdiScreenshotter
 {

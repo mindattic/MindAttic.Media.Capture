@@ -1,7 +1,7 @@
 using System.Drawing.Drawing2D;
 using System.Runtime.InteropServices;
 
-namespace MindAttic.Capture.Tray;
+namespace MindAttic.Media.Capture.Tray;
 
 /// <summary>Tray icons drawn at startup (no image assets): a gray lens when idle, a red dot while recording.</summary>
 internal static class TrayIcons

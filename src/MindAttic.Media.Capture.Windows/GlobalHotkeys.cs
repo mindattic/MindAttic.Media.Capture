@@ -1,7 +1,7 @@
 using System.Runtime.InteropServices;
-using MindAttic.Capture.Hosting;
+using MindAttic.Media.Capture.Hosting;
 
-namespace MindAttic.Capture.Windows;
+namespace MindAttic.Media.Capture.Windows;
 
 /// <summary>
 /// System-wide hotkeys (RegisterHotKey) mapped to capture commands, e.g. "F9" → "screenshot",

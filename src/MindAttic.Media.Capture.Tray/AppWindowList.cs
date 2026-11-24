@@ -1,7 +1,7 @@
 using System.Runtime.InteropServices;
-using MindAttic.Capture.Windows;
+using MindAttic.Media.Capture.Windows;
 
-namespace MindAttic.Capture.Tray;
+namespace MindAttic.Media.Capture.Tray;
 
 /// <summary>The windows offered by Record App / Screenshot App: other processes' visible windows, with their icons.</summary>
 internal static class AppWindowList

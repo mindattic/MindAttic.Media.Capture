@@ -1,9 +1,9 @@
 using System.Globalization;
 using System.Text;
-using MindAttic.Capture.Hosting;
-using MindAttic.Capture.Tape;
+using MindAttic.Media.Capture.Hosting;
+using MindAttic.Media.Capture.Tape;
 
-namespace MindAttic.Capture.Output;
+namespace MindAttic.Media.Capture.Output;
 
 /// <summary>Per-file sidecar (<c>file.ext.json</c>), serialized camelCase by <see cref="ICaptureJson"/>.</summary>
 public sealed class CaptureSidecar

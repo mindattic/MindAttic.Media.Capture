@@ -1,11 +1,11 @@
 using System.IO;
 using System.Text.Json.Nodes;
-using MindAttic.Capture.Tray;
+using MindAttic.Media.Capture.Tray;
 using MindAttic.Vault.Settings;
 using MindAttic.Vault.Settings.Manifest;
 using NUnit.Framework;
 
-namespace MindAttic.Capture.Windows.Tests;
+namespace MindAttic.Media.Capture.Windows.Tests;
 
 public class TraySettingsTests
 {
@@ -189,9 +189,9 @@ public class TraySettingsTests
     public void The_old_settings_window_is_gone()
     {
         var asm = typeof(TraySettings).Assembly;
-        Assert.That(asm.GetType("MindAttic.Capture.Tray.SettingsForm"), Is.Null);
-        Assert.That(asm.GetType("MindAttic.Capture.Tray.TrayPreferences"), Is.Null);
-        Assert.That(asm.GetType("MindAttic.Capture.Tray.TrayApp")!.GetMethod("OpenSettings",
+        Assert.That(asm.GetType("MindAttic.Media.Capture.Tray.SettingsForm"), Is.Null);
+        Assert.That(asm.GetType("MindAttic.Media.Capture.Tray.TrayPreferences"), Is.Null);
+        Assert.That(asm.GetType("MindAttic.Media.Capture.Tray.TrayApp")!.GetMethod("OpenSettings",
             System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic), Is.Not.Null);
     }
 

@@ -1,8 +1,8 @@
 using System.Diagnostics;
-using MindAttic.Capture.Hosting;
+using MindAttic.Media.Capture.Hosting;
 using NUnit.Framework;
 
-namespace MindAttic.Capture.Tests;
+namespace MindAttic.Media.Capture.Tests;
 
 public class TextWriterCaptureLogTests
 {

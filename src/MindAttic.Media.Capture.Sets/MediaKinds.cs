@@ -1,4 +1,4 @@
-namespace MindAttic.Capture.Sets;
+namespace MindAttic.Media.Capture.Sets;
 
 /// <summary>
 /// What a file in a set is, from its name: image, animated, video, audio, hidden (sidecars, thumbnails, logs) or

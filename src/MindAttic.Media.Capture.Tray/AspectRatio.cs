@@ -1,4 +1,4 @@
-namespace MindAttic.Capture.Tray;
+namespace MindAttic.Media.Capture.Tray;
 
 /// <summary>A selector shape: "16:9" is width 16 to height 9; Free has no value.</summary>
 internal sealed record AspectRatio(string Name, double? Value)

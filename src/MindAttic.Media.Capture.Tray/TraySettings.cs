@@ -1,11 +1,11 @@
 using System.Text.Json;
 using System.Text.Json.Serialization;
-using MindAttic.Capture.Windows;
+using MindAttic.Media.Capture.Windows;
 using MindAttic.Vault.Paths;
 using MindAttic.Vault.Settings;
 using MindAttic.Vault.Settings.Manifest;
 
-namespace MindAttic.Capture.Tray;
+namespace MindAttic.Media.Capture.Tray;
 
 /// <summary>A named area to record again without redrawing it, e.g. "YouTube Short".</summary>
 internal sealed class SavedRegion

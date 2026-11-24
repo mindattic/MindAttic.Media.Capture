@@ -1,7 +1,7 @@
 using System.Runtime.InteropServices;
-using MindAttic.Capture.Hosting;
+using MindAttic.Media.Capture.Hosting;
 
-namespace MindAttic.Capture.Windows.Native;
+namespace MindAttic.Media.Capture.Windows.Native;
 
 /// <summary>Puts a captured frame on the Windows clipboard as a standard CF_DIB bitmap.</summary>
 internal static class ClipboardWriter

@@ -1,7 +1,7 @@
 using System.Diagnostics;
 using System.Runtime.InteropServices;
 
-namespace MindAttic.Capture.Internal;
+namespace MindAttic.Media.Capture.Internal;
 
 /// <summary>Machine-wide memory and CPU readings (Windows; other platforms report nothing).</summary>
 internal sealed class SystemStats

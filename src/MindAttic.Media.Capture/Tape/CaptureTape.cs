@@ -1,10 +1,10 @@
 using System.Collections.Concurrent;
 using System.Diagnostics;
-using MindAttic.Capture.Ffmpeg;
-using MindAttic.Capture.Hosting;
-using MindAttic.Capture.Internal;
+using MindAttic.Media.Capture.Ffmpeg;
+using MindAttic.Media.Capture.Hosting;
+using MindAttic.Media.Capture.Internal;
 
-namespace MindAttic.Capture.Tape;
+namespace MindAttic.Media.Capture.Tape;
 
 /// <summary>
 /// A continuously running recorder writing 1-second segments. Recordings, clips, replays and the

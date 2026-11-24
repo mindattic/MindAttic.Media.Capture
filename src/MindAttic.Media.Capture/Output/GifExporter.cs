@@ -1,7 +1,7 @@
-using MindAttic.Capture.Ffmpeg;
-using MindAttic.Capture.Hosting;
+using MindAttic.Media.Capture.Ffmpeg;
+using MindAttic.Media.Capture.Hosting;
 
-namespace MindAttic.Capture.Output;
+namespace MindAttic.Media.Capture.Output;
 
 /// <summary>Stitches screenshot PNGs into a palette-optimized, time-stamped timelapse GIF.</summary>
 internal static class GifExporter

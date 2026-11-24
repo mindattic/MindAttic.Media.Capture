@@ -1,6 +1,6 @@
 using System.Diagnostics;
 using System.Runtime.InteropServices;
-using MindAttic.Capture.Hosting;
+using MindAttic.Media.Capture.Hosting;
 using Vortice.Direct3D;
 using Vortice.Direct3D11;
 using Vortice.DXGI;
@@ -10,7 +10,7 @@ using Windows.Graphics.DirectX;
 using Windows.Graphics.DirectX.Direct3D11;
 using WinRT;
 
-namespace MindAttic.Capture.Windows.Wgc;
+namespace MindAttic.Media.Capture.Windows.Wgc;
 
 /// <summary>
 /// Windows Graphics Capture of one window: follows moves, works while covered, includes GPU content.

@@ -3,7 +3,6 @@
   <PropertyGroup>
     <TargetFramework>net10.0</TargetFramework>
     <PackageId>MindAttic.Media.Capture.Web</PackageId>
-    <RootNamespace>MindAttic.Capture.Web</RootNamespace>
     <!-- HOUSE-LAW-1: whole-number versions only; bump the major. -->
     <Version>1.0.0</Version>
     <Description>Headless web page screenshots and video through Playwright and the installed Microsoft Edge, with capture sidecars.</Description>

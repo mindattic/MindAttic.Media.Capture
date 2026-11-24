@@ -1,14 +1,14 @@
 using System.Collections.Concurrent;
 using System.Diagnostics;
-using MindAttic.Capture.Ffmpeg;
-using MindAttic.Capture.Hosting;
-using MindAttic.Capture.Imaging;
-using MindAttic.Capture.Internal;
-using MindAttic.Capture.Output;
-using MindAttic.Capture.Tape;
-using MindAttic.Capture.Triggers;
+using MindAttic.Media.Capture.Ffmpeg;
+using MindAttic.Media.Capture.Hosting;
+using MindAttic.Media.Capture.Imaging;
+using MindAttic.Media.Capture.Internal;
+using MindAttic.Media.Capture.Output;
+using MindAttic.Media.Capture.Tape;
+using MindAttic.Media.Capture.Triggers;
 
-namespace MindAttic.Capture;
+namespace MindAttic.Media.Capture;
 
 /// <summary>
 /// The capture engine behind every host. Video always comes from one running tape (see

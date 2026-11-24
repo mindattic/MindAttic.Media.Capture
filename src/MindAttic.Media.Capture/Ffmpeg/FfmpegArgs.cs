@@ -1,9 +1,9 @@
 using System.Globalization;
 using System.Text;
-using MindAttic.Capture.Hosting;
-using MindAttic.Capture.Internal;
+using MindAttic.Media.Capture.Hosting;
+using MindAttic.Media.Capture.Internal;
 
-namespace MindAttic.Capture.Ffmpeg;
+namespace MindAttic.Media.Capture.Ffmpeg;
 
 /// <summary>What a preset turns into.</summary>
 /// <param name="Outputs">Files to produce.</param>

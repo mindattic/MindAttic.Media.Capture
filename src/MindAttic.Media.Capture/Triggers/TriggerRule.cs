@@ -1,7 +1,7 @@
 using System.Globalization;
-using MindAttic.Capture.Internal;
+using MindAttic.Media.Capture.Internal;
 
-namespace MindAttic.Capture.Triggers;
+namespace MindAttic.Media.Capture.Triggers;
 
 /// <summary>What a trigger rule does when it fires.</summary>
 public enum TriggerAction

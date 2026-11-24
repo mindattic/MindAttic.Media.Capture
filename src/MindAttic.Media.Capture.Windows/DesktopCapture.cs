@@ -1,9 +1,9 @@
 using System.Diagnostics;
-using MindAttic.Capture.Hosting;
+using MindAttic.Media.Capture.Hosting;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 
-namespace MindAttic.Capture.Windows;
+namespace MindAttic.Media.Capture.Windows;
 
 /// <summary>One-line setup for Windows apps and tools.</summary>
 public static class DesktopCapture

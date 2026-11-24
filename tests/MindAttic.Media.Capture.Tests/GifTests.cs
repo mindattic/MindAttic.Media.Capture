@@ -1,10 +1,10 @@
 using System.Diagnostics;
-using MindAttic.Capture.Ffmpeg;
-using MindAttic.Capture.Hosting;
-using MindAttic.Capture.Output;
+using MindAttic.Media.Capture.Ffmpeg;
+using MindAttic.Media.Capture.Hosting;
+using MindAttic.Media.Capture.Output;
 using NUnit.Framework;
 
-namespace MindAttic.Capture.Tests;
+namespace MindAttic.Media.Capture.Tests;
 
 public class GifArgsTests
 {

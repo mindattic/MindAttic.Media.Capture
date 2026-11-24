@@ -1,7 +1,7 @@
 using System.Runtime.InteropServices;
-using MindAttic.Capture.Windows;
+using MindAttic.Media.Capture.Windows;
 
-namespace MindAttic.Capture.Tray;
+namespace MindAttic.Media.Capture.Tray;
 
 /// <summary>
 /// A thin red frame drawn just outside an area while it records. Clicks pass through it, and it is excluded

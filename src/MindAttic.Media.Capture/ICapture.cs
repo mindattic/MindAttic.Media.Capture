@@ -1,8 +1,8 @@
 using System.Diagnostics;
-using MindAttic.Capture.Hosting;
-using MindAttic.Capture.Triggers;
+using MindAttic.Media.Capture.Hosting;
+using MindAttic.Media.Capture.Triggers;
 
-namespace MindAttic.Capture;
+namespace MindAttic.Media.Capture;
 
 /// <summary>
 /// The one capture API every host exposes. Calls are thread-safe and never block the calling

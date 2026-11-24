@@ -1,7 +1,7 @@
 using System.Text.Json;
 using System.Text.Json.Serialization;
 
-namespace MindAttic.Capture.Sets;
+namespace MindAttic.Media.Capture.Sets;
 
 /// <summary>One preview set: the contents of its <c>preview.json</c> (schema <see cref="PreviewSet.SchemaV1"/>).</summary>
 public sealed class PreviewSet

@@ -1,6 +1,6 @@
-using MindAttic.Capture.Hosting;
+using MindAttic.Media.Capture.Hosting;
 
-namespace MindAttic.Capture;
+namespace MindAttic.Media.Capture;
 
 /// <summary>What produced a <see cref="CaptureResult"/>.</summary>
 public enum CaptureKind

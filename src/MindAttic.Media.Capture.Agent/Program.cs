@@ -1,15 +1,15 @@
 using System.Diagnostics;
-using MindAttic.Capture;
-using MindAttic.Capture.Agent;
-using MindAttic.Capture.Hosting;
-using MindAttic.Capture.Sets;
-using MindAttic.Capture.Windows;
-using MindAttic.Capture.Windows.Native;
-using MindAttic.Capture.Windows.Screenshots;
+using MindAttic.Media.Capture;
+using MindAttic.Media.Capture.Agent;
+using MindAttic.Media.Capture.Hosting;
+using MindAttic.Media.Capture.Sets;
+using MindAttic.Media.Capture.Windows;
+using MindAttic.Media.Capture.Windows.Native;
+using MindAttic.Media.Capture.Windows.Screenshots;
 
 return await AgentProgram.MainAsync(args);
 
-namespace MindAttic.Capture.Agent
+namespace MindAttic.Media.Capture.Agent
 {
     internal static class AgentProgram
     {

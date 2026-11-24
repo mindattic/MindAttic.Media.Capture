@@ -1,7 +1,7 @@
 using System.Globalization;
-using MindAttic.Capture.Hosting;
+using MindAttic.Media.Capture.Hosting;
 
-namespace MindAttic.Capture.Windows.Video;
+namespace MindAttic.Media.Capture.Windows.Video;
 
 /// <summary>Builds ffmpeg-native desktop inputs: Desktop Duplication (ddagrab) when possible, GDI (gdigrab) as fallback.</summary>
 internal static class DesktopInputs

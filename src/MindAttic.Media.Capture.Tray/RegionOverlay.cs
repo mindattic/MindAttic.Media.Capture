@@ -1,8 +1,8 @@
 ﻿using System.Drawing.Drawing2D;
 using System.Drawing.Text;
-using MindAttic.Capture.Windows;
+using MindAttic.Media.Capture.Windows;
 
-namespace MindAttic.Capture.Tray;
+namespace MindAttic.Media.Capture.Tray;
 
 /// <summary>How the selector closed: Confirm is Enter (what it then does is up to whoever opened it).</summary>
 internal enum OverlayAction { Cancel, Confirm, Record, Screenshot }

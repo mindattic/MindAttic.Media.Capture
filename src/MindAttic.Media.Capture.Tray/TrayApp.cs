@@ -1,8 +1,8 @@
 using System.Diagnostics;
 using System.Reflection;
-using MindAttic.Capture.Windows;
+using MindAttic.Media.Capture.Windows;
 
-namespace MindAttic.Capture.Tray;
+namespace MindAttic.Media.Capture.Tray;
 
 /// <summary>What the hotkeys capture: the last screen, app or area recorded, shot or armed from the selector.</summary>
 internal sealed record ArmedTarget(CaptureTarget Target, string App, string Label, VideoFormat Video, ImageFormat Image)

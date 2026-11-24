@@ -1,10 +1,10 @@
-using MindAttic.Capture.Hosting;
-using MindAttic.Capture.Windows.Audio;
-using MindAttic.Capture.Windows.Screenshots;
-using MindAttic.Capture.Windows.Video;
-using MindAttic.Capture.Windows.Wgc;
+using MindAttic.Media.Capture.Hosting;
+using MindAttic.Media.Capture.Windows.Audio;
+using MindAttic.Media.Capture.Windows.Screenshots;
+using MindAttic.Media.Capture.Windows.Video;
+using MindAttic.Media.Capture.Windows.Wgc;
 
-namespace MindAttic.Capture.Windows;
+namespace MindAttic.Media.Capture.Windows;
 
 /// <summary>Desktop host options.</summary>
 public sealed class DesktopHostOptions

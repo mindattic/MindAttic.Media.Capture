@@ -1,7 +1,7 @@
 using System.Runtime.InteropServices;
-using MindAttic.Capture.Windows;
+using MindAttic.Media.Capture.Windows;
 
-namespace MindAttic.Capture.Tray;
+namespace MindAttic.Media.Capture.Tray;
 
 internal enum TrayHotkey { Record = 1, Screenshot = 2 }
 

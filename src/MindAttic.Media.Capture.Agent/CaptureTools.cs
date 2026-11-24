@@ -1,9 +1,9 @@
 using System.ComponentModel;
-using MindAttic.Capture.Hosting;
-using MindAttic.Capture.Sets;
+using MindAttic.Media.Capture.Hosting;
+using MindAttic.Media.Capture.Sets;
 using ModelContextProtocol.Server;
 
-namespace MindAttic.Capture.Agent;
+namespace MindAttic.Media.Capture.Agent;
 
 /// <summary>
 /// The six tools <c>capture mcp</c> exposes. Each builds the same <see cref="AgentArgs"/> the CLI would parse from

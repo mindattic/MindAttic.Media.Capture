@@ -1,11 +1,11 @@
 using System.Diagnostics;
-using MindAttic.Capture.Ffmpeg;
-using MindAttic.Capture.Hosting;
-using MindAttic.Capture.Internal;
-using MindAttic.Capture.Output;
-using MindAttic.Capture.Tape;
+using MindAttic.Media.Capture.Ffmpeg;
+using MindAttic.Media.Capture.Hosting;
+using MindAttic.Media.Capture.Internal;
+using MindAttic.Media.Capture.Output;
+using MindAttic.Media.Capture.Tape;
 
-namespace MindAttic.Capture;
+namespace MindAttic.Media.Capture;
 
 /// <summary>
 /// Turns a stopped session tape into session.mkv/.mp4 in the session folder. Runs in-process, in a

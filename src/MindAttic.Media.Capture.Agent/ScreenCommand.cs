@@ -1,9 +1,9 @@
-using MindAttic.Capture.Hosting;
-using MindAttic.Capture.Sets;
-using MindAttic.Capture.Windows;
-using MindAttic.Capture.Windows.Native;
+using MindAttic.Media.Capture.Hosting;
+using MindAttic.Media.Capture.Sets;
+using MindAttic.Media.Capture.Windows;
+using MindAttic.Media.Capture.Windows.Native;
 
-namespace MindAttic.Capture.Agent;
+namespace MindAttic.Media.Capture.Agent;
 
 /// <summary>
 /// <c>capture shot|screenshot &lt;target&gt;</c>: one still from the desktop capture engine, optionally into a

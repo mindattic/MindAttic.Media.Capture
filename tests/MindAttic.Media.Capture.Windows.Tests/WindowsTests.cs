@@ -1,17 +1,17 @@
 using System.IO;
 using System.Diagnostics;
-using MindAttic.Capture.Agent;
-using MindAttic.Capture.Ffmpeg;
-using MindAttic.Capture.Hosting;
-using MindAttic.Capture.Windows;
-using MindAttic.Capture.Windows.Audio;
-using MindAttic.Capture.Windows.Native;
-using MindAttic.Capture.Windows.Video;
-using MindAttic.Capture.Windows.Wgc;
+using MindAttic.Media.Capture.Agent;
+using MindAttic.Media.Capture.Ffmpeg;
+using MindAttic.Media.Capture.Hosting;
+using MindAttic.Media.Capture.Windows;
+using MindAttic.Media.Capture.Windows.Audio;
+using MindAttic.Media.Capture.Windows.Native;
+using MindAttic.Media.Capture.Windows.Video;
+using MindAttic.Media.Capture.Windows.Wgc;
 using NAudio.Wave;
 using NUnit.Framework;
 
-namespace MindAttic.Capture.Windows.Tests;
+namespace MindAttic.Media.Capture.Windows.Tests;
 
 public class BrowserLocatorTests
 {

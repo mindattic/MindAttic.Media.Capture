@@ -4,7 +4,6 @@
     <!-- netstandard2.1 is the build Unity consumes; keep this project free of third-party dependencies. -->
     <TargetFrameworks>netstandard2.1;net10.0</TargetFrameworks>
     <PackageId>MindAttic.Media.Capture</PackageId>
-    <RootNamespace>MindAttic.Capture</RootNamespace>
     <!-- HOUSE-LAW-1: whole-number versions only; bump the major. -->
     <Version>1.0.0</Version>
     <Description>Programmatic video capture and screenshots for games and apps: event triggers, rolling replay, session recording, sidecar metadata. Host-agnostic core.</Description>

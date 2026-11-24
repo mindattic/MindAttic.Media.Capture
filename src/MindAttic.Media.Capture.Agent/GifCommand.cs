@@ -1,6 +1,6 @@
-using MindAttic.Capture.Hosting;
+using MindAttic.Media.Capture.Hosting;
 
-namespace MindAttic.Capture.Agent;
+namespace MindAttic.Media.Capture.Agent;
 
 /// <summary>
 /// <c>capture gif &lt;folder&gt;</c>: stitches a folder's screenshot PNGs, in name order, into a timelapse GIF

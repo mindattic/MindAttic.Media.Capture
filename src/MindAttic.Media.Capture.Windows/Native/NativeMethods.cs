@@ -1,7 +1,7 @@
 using System.Runtime.InteropServices;
 using System.Text;
 
-namespace MindAttic.Capture.Windows.Native;
+namespace MindAttic.Media.Capture.Windows.Native;
 
 internal static class NativeMethods
 {

@@ -1,10 +1,10 @@
 using System.Collections.Concurrent;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
-using MindAttic.Capture.Hosting;
-using MindAttic.Capture.Internal;
+using MindAttic.Media.Capture.Hosting;
+using MindAttic.Media.Capture.Internal;
 
-namespace MindAttic.Capture.Ffmpeg;
+namespace MindAttic.Media.Capture.Ffmpeg;
 
 internal static class FfmpegLocator
 {

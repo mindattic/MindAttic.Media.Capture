@@ -1,8 +1,8 @@
-using MindAttic.Capture.Hosting;
-using MindAttic.Capture.Triggers;
+using MindAttic.Media.Capture.Hosting;
+using MindAttic.Media.Capture.Triggers;
 using NUnit.Framework;
 
-namespace MindAttic.Capture.Tests;
+namespace MindAttic.Media.Capture.Tests;
 
 public class TriggerTests
 {

@@ -1,7 +1,7 @@
 using System.Globalization;
-using MindAttic.Capture.Ffmpeg;
+using MindAttic.Media.Capture.Ffmpeg;
 
-namespace MindAttic.Capture.Tape;
+namespace MindAttic.Media.Capture.Tape;
 
 /// <summary>One finished tape segment; times are tape seconds.</summary>
 internal sealed record TapeSegment(string File, double Start, double End);

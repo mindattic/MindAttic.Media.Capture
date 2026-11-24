@@ -3,7 +3,7 @@ using System.Text.Json;
 using System.Text.Json.Serialization;
 #endif
 
-namespace MindAttic.Capture.Hosting;
+namespace MindAttic.Media.Capture.Hosting;
 
 /// <summary>
 /// JSON used for config files, sidecars, manifests and finalize state. On .NET it defaults to

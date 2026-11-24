@@ -1,7 +1,7 @@
 using System.Runtime.InteropServices;
-using MindAttic.Capture.Windows.Native;
+using MindAttic.Media.Capture.Windows.Native;
 
-namespace MindAttic.Capture.Windows;
+namespace MindAttic.Media.Capture.Windows;
 
 public sealed record MonitorInfo(int Index, PixelRect Bounds, bool IsPrimary, string DeviceName);
 

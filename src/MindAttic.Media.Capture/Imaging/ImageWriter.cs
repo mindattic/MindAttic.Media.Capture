@@ -1,7 +1,7 @@
 using System.IO.Compression;
-using MindAttic.Capture.Hosting;
+using MindAttic.Media.Capture.Hosting;
 
-namespace MindAttic.Capture.Imaging;
+namespace MindAttic.Media.Capture.Imaging;
 
 /// <summary>Lossless still writers with no dependencies (works under Unity too). JPG/WebP go through ffmpeg.</summary>
 internal static class ImageWriter

@@ -2,7 +2,7 @@ using System.IO;
 using MindAttic.Vault.Paths;
 using NUnit.Framework;
 
-namespace MindAttic.Capture.Windows.Tests;
+namespace MindAttic.Media.Capture.Windows.Tests;
 
 /// <summary>
 /// Points MindAttic Vault's roaming and local roots at a temp folder for the whole assembly, so no test writes the

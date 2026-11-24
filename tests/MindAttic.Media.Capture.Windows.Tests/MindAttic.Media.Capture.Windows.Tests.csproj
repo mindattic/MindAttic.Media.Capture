@@ -3,7 +3,6 @@
   <PropertyGroup>
     <TargetFramework>net10.0-windows10.0.19041.0</TargetFramework>
     <IsPackable>false</IsPackable>
-    <RootNamespace>MindAttic.Capture.Windows.Tests</RootNamespace>
     <UseWPF>true</UseWPF>
     <MSBuildWarningsAsMessages>MSB3277</MSBuildWarningsAsMessages>
   </PropertyGroup>

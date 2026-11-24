@@ -1,4 +1,4 @@
-namespace MindAttic.Capture.Windows;
+namespace MindAttic.Media.Capture.Windows;
 
 /// <summary>A rectangle in physical pixels on the virtual desktop.</summary>
 public readonly record struct PixelRect(int X, int Y, int Width, int Height)

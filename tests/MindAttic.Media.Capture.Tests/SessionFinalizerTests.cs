@@ -1,11 +1,11 @@
 using System.Diagnostics;
-using MindAttic.Capture.Ffmpeg;
-using MindAttic.Capture.Hosting;
-using MindAttic.Capture.Output;
-using MindAttic.Capture.Tape;
+using MindAttic.Media.Capture.Ffmpeg;
+using MindAttic.Media.Capture.Hosting;
+using MindAttic.Media.Capture.Output;
+using MindAttic.Media.Capture.Tape;
 using NUnit.Framework;
 
-namespace MindAttic.Capture.Tests;
+namespace MindAttic.Media.Capture.Tests;
 
 /// <summary>
 /// Covers crash recovery: a tape left behind under .staging when the owning process never got to

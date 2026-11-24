@@ -1,9 +1,9 @@
 using System.Diagnostics;
-using MindAttic.Capture.Ffmpeg;
-using MindAttic.Capture.Hosting;
+using MindAttic.Media.Capture.Ffmpeg;
+using MindAttic.Media.Capture.Hosting;
 using NUnit.Framework;
 
-namespace MindAttic.Capture.Tests;
+namespace MindAttic.Media.Capture.Tests;
 
 /// <summary>A host that renders a moving gradient, so engine tests need ffmpeg but no desktop.</summary>
 internal sealed class SyntheticHost(int width = 320, int height = 180, bool realTime = true) : ICaptureHost

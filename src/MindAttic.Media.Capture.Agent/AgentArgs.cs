@@ -1,8 +1,8 @@
 using System.Globalization;
-using MindAttic.Capture.Internal;
-using MindAttic.Capture.Windows;
+using MindAttic.Media.Capture.Internal;
+using MindAttic.Media.Capture.Windows;
 
-namespace MindAttic.Capture.Agent;
+namespace MindAttic.Media.Capture.Agent;
 
 /// <summary>Parsed agent command line: a command, positional values, --options, and anything after "--".</summary>
 internal sealed class AgentArgs
@@ -112,11 +112,11 @@ internal sealed class AgentArgs
 
     public ImageFormat ImageFormat() => (Get("format") ?? "png").ToLowerInvariant() switch
     {
-        "png" => global::MindAttic.Capture.ImageFormat.Png,
-        "jpg" or "jpeg" => global::MindAttic.Capture.ImageFormat.Jpg,
-        "webp" => global::MindAttic.Capture.ImageFormat.WebP,
-        "bmp" => global::MindAttic.Capture.ImageFormat.Bmp,
-        "raw" or "rawbgra" => global::MindAttic.Capture.ImageFormat.RawBgra,
+        "png" => global::MindAttic.Media.Capture.ImageFormat.Png,
+        "jpg" or "jpeg" => global::MindAttic.Media.Capture.ImageFormat.Jpg,
+        "webp" => global::MindAttic.Media.Capture.ImageFormat.WebP,
+        "bmp" => global::MindAttic.Media.Capture.ImageFormat.Bmp,
+        "raw" or "rawbgra" => global::MindAttic.Media.Capture.ImageFormat.RawBgra,
         var f => throw new CaptureException(CaptureError.InvalidArgument, $"Unknown --format \"{f}\" (png, jpg, webp, bmp, raw)."),
     };
 

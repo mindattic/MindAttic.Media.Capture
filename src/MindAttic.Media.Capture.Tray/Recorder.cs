@@ -1,7 +1,7 @@
 using System.Diagnostics;
-using MindAttic.Capture.Windows;
+using MindAttic.Media.Capture.Windows;
 
-namespace MindAttic.Capture.Tray;
+namespace MindAttic.Media.Capture.Tray;
 
 internal enum RecorderState { Idle, Starting, Recording, Stopping }
 

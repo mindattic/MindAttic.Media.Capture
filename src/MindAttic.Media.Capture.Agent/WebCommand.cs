@@ -1,9 +1,9 @@
-using MindAttic.Capture.Hosting;
-using MindAttic.Capture.Output;
-using MindAttic.Capture.Sets;
-using MindAttic.Capture.Web;
+using MindAttic.Media.Capture.Hosting;
+using MindAttic.Media.Capture.Output;
+using MindAttic.Media.Capture.Sets;
+using MindAttic.Media.Capture.Web;
 
-namespace MindAttic.Capture.Agent;
+namespace MindAttic.Media.Capture.Agent;
 
 /// <summary>
 /// <c>capture web &lt;url&gt;</c>: headless screenshots and (<c>--video</c>) webm of a page through Playwright and the

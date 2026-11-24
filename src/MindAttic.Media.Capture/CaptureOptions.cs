@@ -1,9 +1,9 @@
 using System.Reflection;
-using MindAttic.Capture.Hosting;
-using MindAttic.Capture.Internal;
-using MindAttic.Capture.Triggers;
+using MindAttic.Media.Capture.Hosting;
+using MindAttic.Media.Capture.Internal;
+using MindAttic.Media.Capture.Triggers;
 
-namespace MindAttic.Capture;
+namespace MindAttic.Media.Capture;
 
 /// <summary>Everything that configures a capture engine. Defaults suit MindAttic development machines.</summary>
 public sealed class CaptureOptions

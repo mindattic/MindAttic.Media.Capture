@@ -4,10 +4,10 @@ using System.Net.WebSockets;
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
-using MindAttic.Capture.Hosting;
+using MindAttic.Media.Capture.Hosting;
 using MindAttic.Vault.Paths;
 
-namespace MindAttic.Capture.Agent;
+namespace MindAttic.Media.Capture.Agent;
 
 /// <summary>
 /// Localhost capture API for browser pages, scripts and apps that can't reference the .NET packages.

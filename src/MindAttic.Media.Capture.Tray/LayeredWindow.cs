@@ -1,8 +1,8 @@
 ﻿using System.Drawing.Imaging;
 using System.Runtime.InteropServices;
-using MindAttic.Capture.Windows;
+using MindAttic.Media.Capture.Windows;
 
-namespace MindAttic.Capture.Tray;
+namespace MindAttic.Media.Capture.Tray;
 
 /// <summary>
 /// A borderless topmost window drawn with per-pixel alpha (UpdateLayeredWindow), in physical pixels.

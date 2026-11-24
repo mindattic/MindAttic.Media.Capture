@@ -1,9 +1,9 @@
 using System.Diagnostics;
-using MindAttic.Capture.Hosting;
+using MindAttic.Media.Capture.Hosting;
 using NAudio.CoreAudioApi;
 using NAudio.Wave;
 
-namespace MindAttic.Capture.Windows.Audio;
+namespace MindAttic.Media.Capture.Windows.Audio;
 
 /// <summary>
 /// One WASAPI track (system loopback or the default microphone) written as raw PCM. WASAPI loopback

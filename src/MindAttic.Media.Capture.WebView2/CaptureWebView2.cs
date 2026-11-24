@@ -2,7 +2,7 @@ using System.Globalization;
 using System.Text.Json;
 using Microsoft.Web.WebView2.Core;
 
-namespace MindAttic.Capture.WebView2;
+namespace MindAttic.Media.Capture.WebView2;
 
 /// <summary>Bridge settings.</summary>
 public sealed class WebViewBridgeOptions

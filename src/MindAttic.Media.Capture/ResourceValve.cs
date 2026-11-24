@@ -1,11 +1,11 @@
 using System.Diagnostics;
 using System.Globalization;
 using System.Text;
-using MindAttic.Capture.Hosting;
-using MindAttic.Capture.Internal;
-using MindAttic.Capture.Tape;
+using MindAttic.Media.Capture.Hosting;
+using MindAttic.Media.Capture.Internal;
+using MindAttic.Media.Capture.Tape;
 
-namespace MindAttic.Capture;
+namespace MindAttic.Media.Capture;
 
 /// <summary>One poll of the resources the valve watches. Null means "unknown on this platform".</summary>
 internal sealed record ValveSample(

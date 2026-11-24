@@ -1,6 +1,6 @@
 using System.Diagnostics;
 
-namespace MindAttic.Capture.Hosting;
+namespace MindAttic.Media.Capture.Hosting;
 
 /// <summary>Log severity.</summary>
 public enum CaptureLogLevel

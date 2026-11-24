@@ -1,6 +1,6 @@
 using Microsoft.Win32;
 
-namespace MindAttic.Capture.Tray;
+namespace MindAttic.Media.Capture.Tray;
 
 /// <summary>Start with Windows: a per-user Run entry pointing at this exe.</summary>
 internal static class StartupRegistration

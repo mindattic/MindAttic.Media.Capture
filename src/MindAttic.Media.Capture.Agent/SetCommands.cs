@@ -1,8 +1,8 @@
 using System.Text.Json;
-using MindAttic.Capture.Hosting;
-using MindAttic.Capture.Sets;
+using MindAttic.Media.Capture.Hosting;
+using MindAttic.Media.Capture.Sets;
 
-namespace MindAttic.Capture.Agent;
+namespace MindAttic.Media.Capture.Agent;
 
 /// <summary>
 /// <c>capture set new|add|list|show</c>, and <c>--set DIR</c> on shot/record: the engine writes into a staging folder

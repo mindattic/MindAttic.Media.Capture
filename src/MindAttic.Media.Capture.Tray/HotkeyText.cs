@@ -1,4 +1,4 @@
-namespace MindAttic.Capture.Tray;
+namespace MindAttic.Media.Capture.Tray;
 
 /// <summary>Turns a key press into the hotkey text <see cref="Windows.GlobalHotkeys.TryParse"/> reads ("Ctrl+Alt+Shift+R").</summary>
 internal static class HotkeyText

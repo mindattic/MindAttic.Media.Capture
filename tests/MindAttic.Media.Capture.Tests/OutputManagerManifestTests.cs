@@ -1,10 +1,10 @@
 using System.Collections.Concurrent;
-using MindAttic.Capture.Hosting;
-using MindAttic.Capture.Output;
-using MindAttic.Capture.Tape;
+using MindAttic.Media.Capture.Hosting;
+using MindAttic.Media.Capture.Output;
+using MindAttic.Media.Capture.Tape;
 using NUnit.Framework;
 
-namespace MindAttic.Capture.Tests;
+namespace MindAttic.Media.Capture.Tests;
 
 /// <summary>Covers OutputManager's sidecar and session-manifest bookkeeping (naming/root resolution is in OutputManagerTests).</summary>
 public class OutputManagerManifestTests

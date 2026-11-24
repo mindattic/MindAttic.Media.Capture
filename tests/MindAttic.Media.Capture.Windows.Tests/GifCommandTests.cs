@@ -1,10 +1,10 @@
 using System.IO;
-using MindAttic.Capture.Agent;
-using MindAttic.Capture.Ffmpeg;
-using MindAttic.Capture.Hosting;
+using MindAttic.Media.Capture.Agent;
+using MindAttic.Media.Capture.Ffmpeg;
+using MindAttic.Media.Capture.Hosting;
 using NUnit.Framework;
 
-namespace MindAttic.Capture.Windows.Tests;
+namespace MindAttic.Media.Capture.Windows.Tests;
 
 [NonParallelizable]
 public class GifCommandTests

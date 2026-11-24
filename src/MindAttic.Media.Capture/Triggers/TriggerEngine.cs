@@ -1,7 +1,7 @@
 using System.Diagnostics;
-using MindAttic.Capture.Hosting;
+using MindAttic.Media.Capture.Hosting;
 
-namespace MindAttic.Capture.Triggers;
+namespace MindAttic.Media.Capture.Triggers;
 
 /// <summary>Registers rules from code; capture.json rules land here too.</summary>
 public interface ITriggerRegistry

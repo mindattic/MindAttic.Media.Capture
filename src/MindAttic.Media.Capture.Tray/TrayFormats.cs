@@ -1,7 +1,7 @@
 using System.Text.Json.Serialization;
-using MindAttic.Capture.Windows;
+using MindAttic.Media.Capture.Windows;
 
-namespace MindAttic.Capture.Tray;
+namespace MindAttic.Media.Capture.Tray;
 
 /// <summary>What a tray recording produces. The tape is always lossless; this picks the files exported from it.</summary>
 [JsonConverter(typeof(JsonStringEnumConverter<VideoFormat>))]

@@ -1,10 +1,10 @@
 using System.Windows;
 using System.Windows.Interop;
 using System.Windows.Threading;
-using MindAttic.Capture.Hosting;
-using MindAttic.Capture.Windows;
+using MindAttic.Media.Capture.Hosting;
+using MindAttic.Media.Capture.Windows;
 
-namespace MindAttic.Capture.Wpf;
+namespace MindAttic.Media.Capture.Wpf;
 
 /// <summary>
 /// One-line capture for WPF apps. Call <see cref="Init"/> in <c>App.OnStartup</c>:

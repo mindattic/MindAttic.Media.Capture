@@ -3,10 +3,10 @@ using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
 using System.Text.Json.Nodes;
-using MindAttic.Capture.Hosting;
-using MindAttic.Capture.Output;
+using MindAttic.Media.Capture.Hosting;
+using MindAttic.Media.Capture.Output;
 
-namespace MindAttic.Capture.Sets;
+namespace MindAttic.Media.Capture.Sets;
 
 /// <summary>How <see cref="PreviewSetStore.Import"/> brings a file into a set.</summary>
 public enum ImportMode

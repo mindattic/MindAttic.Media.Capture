@@ -1,9 +1,9 @@
 using System.IO;
 using System.Text.Json;
-using MindAttic.Capture.WebView2;
+using MindAttic.Media.Capture.WebView2;
 using NUnit.Framework;
 
-namespace MindAttic.Capture.Windows.Tests;
+namespace MindAttic.Media.Capture.Windows.Tests;
 
 public class WebViewBridgeTests
 {

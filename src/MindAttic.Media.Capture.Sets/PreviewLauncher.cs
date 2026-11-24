@@ -3,7 +3,7 @@ using System.Diagnostics;
 using System.IO.Pipes;
 using System.Text;
 
-namespace MindAttic.Capture.Sets;
+namespace MindAttic.Media.Capture.Sets;
 
 /// <summary>How <see cref="PreviewLauncher.Show"/> got the set in front of the owner.</summary>
 public enum PreviewShown

@@ -1,9 +1,9 @@
 using System.Diagnostics;
 using System.Runtime.InteropServices;
-using MindAttic.Capture.Hosting;
-using MindAttic.Capture.Internal;
+using MindAttic.Media.Capture.Hosting;
+using MindAttic.Media.Capture.Internal;
 
-namespace MindAttic.Capture.Output;
+namespace MindAttic.Media.Capture.Output;
 
 /// <summary>
 /// Runs developer-configured commands after captures. Commands only ever come from

@@ -4,7 +4,6 @@
     <TargetFramework>net10.0-windows10.0.19041.0</TargetFramework>
     <UseWPF>true</UseWPF>
     <PackageId>MindAttic.Media.Capture.Wpf</PackageId>
-    <RootNamespace>MindAttic.Capture.Wpf</RootNamespace>
     <!-- HOUSE-LAW-1: whole-number versions only; bump the major. -->
     <Version>1.0.0</Version>
     <Description>One-line MindAttic.Media.Capture setup for WPF apps: -capture video / -capture screen N on the main window, export on exit.</Description>

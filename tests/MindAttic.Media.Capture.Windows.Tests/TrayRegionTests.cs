@@ -1,7 +1,7 @@
-using MindAttic.Capture.Tray;
+using MindAttic.Media.Capture.Tray;
 using NUnit.Framework;
 
-namespace MindAttic.Capture.Windows.Tests;
+namespace MindAttic.Media.Capture.Windows.Tests;
 
 public class TrayRegionTests
 {

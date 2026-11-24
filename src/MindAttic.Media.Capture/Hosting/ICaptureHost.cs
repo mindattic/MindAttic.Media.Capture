@@ -1,4 +1,4 @@
-namespace MindAttic.Capture.Hosting;
+namespace MindAttic.Media.Capture.Hosting;
 
 /// <summary>What a host adapter can do beyond plain capture.</summary>
 [Flags]

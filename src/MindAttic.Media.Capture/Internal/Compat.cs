@@ -8,7 +8,7 @@ namespace System.Runtime.CompilerServices
 }
 #endif
 
-namespace MindAttic.Capture.Internal
+namespace MindAttic.Media.Capture.Internal
 {
     internal static class Compat
     {

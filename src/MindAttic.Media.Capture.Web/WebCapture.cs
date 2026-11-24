@@ -1,9 +1,9 @@
 using System.Globalization;
-using MindAttic.Capture.Hosting;
-using MindAttic.Capture.Output;
+using MindAttic.Media.Capture.Hosting;
+using MindAttic.Media.Capture.Output;
 using Microsoft.Playwright;
 
-namespace MindAttic.Capture.Web;
+namespace MindAttic.Media.Capture.Web;
 
 /// <summary>What <see cref="WebCapture.CaptureAsync"/> captures.</summary>
 public sealed class WebCaptureOptions

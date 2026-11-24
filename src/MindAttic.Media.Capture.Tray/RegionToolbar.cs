@@ -1,4 +1,4 @@
-namespace MindAttic.Capture.Tray;
+namespace MindAttic.Media.Capture.Tray;
 
 /// <summary>The area selector's controls, shown just outside the selection so they are never recorded.</summary>
 internal sealed class RegionToolbar : Form

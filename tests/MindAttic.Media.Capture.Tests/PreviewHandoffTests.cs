@@ -1,7 +1,7 @@
-using MindAttic.Capture.Sets;
+using MindAttic.Media.Capture.Sets;
 using NUnit.Framework;
 
-namespace MindAttic.Capture.Tests;
+namespace MindAttic.Media.Capture.Tests;
 
 public class PreviewHandoffTests
 {

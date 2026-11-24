@@ -1,7 +1,7 @@
 using System.Diagnostics;
-using MindAttic.Capture.Windows.Native;
+using MindAttic.Media.Capture.Windows.Native;
 
-namespace MindAttic.Capture.Windows;
+namespace MindAttic.Media.Capture.Windows;
 
 /// <param name="Bounds">Physical-pixel rectangle on the virtual desktop.</param>
 /// <param name="Hwnd">Non-zero when the target is a window (screenshots use PrintWindow for it).</param>

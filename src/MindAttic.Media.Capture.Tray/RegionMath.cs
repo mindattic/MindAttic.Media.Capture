@@ -1,6 +1,6 @@
-using MindAttic.Capture.Windows;
+using MindAttic.Media.Capture.Windows;
 
-namespace MindAttic.Capture.Tray;
+namespace MindAttic.Media.Capture.Tray;
 
 /// <summary>What a press on the selection grabs. The upper-left corner moves the whole rectangle; the rest resize it.</summary>
 internal enum Grip { None, Move, Top, Right, Bottom, Left, TopRight, BottomRight, BottomLeft }

@@ -1,4 +1,4 @@
-namespace MindAttic.Capture.Tray;
+namespace MindAttic.Media.Capture.Tray;
 
 /// <summary>The words of the notification shown when a capture finishes.</summary>
 internal static class CaptureReport

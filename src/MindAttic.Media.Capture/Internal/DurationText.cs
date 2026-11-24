@@ -1,6 +1,6 @@
 using System.Globalization;
 
-namespace MindAttic.Capture.Internal;
+namespace MindAttic.Media.Capture.Internal;
 
 /// <summary>Parses "1500ms", "5s", "2.5s", "3m", "1h"; a bare number means seconds.</summary>
 internal static class DurationText

@@ -1,4 +1,4 @@
-namespace MindAttic.Capture.Windows;
+namespace MindAttic.Media.Capture.Windows;
 
 /// <summary>What to capture. Coordinates are physical pixels on the virtual desktop.</summary>
 public abstract record CaptureTarget
