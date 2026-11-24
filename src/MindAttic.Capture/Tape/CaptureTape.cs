@@ -170,15 +170,25 @@ internal sealed class CaptureTape : IAsyncDisposable
     /// <summary>Retention: segments ending before keepFrom() are deleted (never while the session is being recorded).</summary>
     public void SetRetention(Func<double> keepFrom) => _keepFrom = keepFrom;
 
-    /// <summary>Waits until finished segments cover tape time <paramref name="t"/> (or the tape stops).</summary>
+    /// <summary>
+    /// Waits until finished segments cover tape time <paramref name="t"/> (or the tape stops). The timeout counts from the
+    /// last finished segment, so an encoder that lags behind real time but keeps producing is waited for instead of cut short.
+    /// </summary>
     public async Task<bool> WaitForCoverageAsync(double t, TimeSpan timeout, CancellationToken ct = default)
     {
-        var deadline = Stopwatch.StartNew();
-        while (deadline.Elapsed < timeout)
+        var stalled = Stopwatch.StartNew();
+        var encoded = double.NegativeInfinity;
+        while (stalled.Elapsed < timeout)
         {
             var segs = Segments();
-            if (segs.Count > 0 && segs[segs.Count - 1].End >= t - 0.001) return true;
+            var end = segs.Count > 0 ? segs[segs.Count - 1].End : double.NegativeInfinity;
+            if (end >= t - 0.001) return true;
             if (!IsRunning) return segs.Count > 0;
+            if (end > encoded)
+            {
+                encoded = end;
+                stalled.Restart();
+            }
             await Task.Delay(100, ct).ConfigureAwait(false);
         }
         return false;
