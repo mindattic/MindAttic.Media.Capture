@@ -363,6 +363,20 @@ Source layout: `src\` holds the core, Windows, Wpf, WebView2, Sets, Web, Agent a
 `MindAttic.Media.Capture.Tests` and `MindAttic.Media.Capture.Windows.Tests`; `unity\` is the Unity package and `js\`
 the JavaScript client. `capture recover` with no root also scans the fallback output folder.
 
+## MindAttic.Media.Capture.Unity
+
+The Unity package lives in `unity\com.mindattic.media.capture` and shows in Package Manager as
+MindAttic.Media.Capture.Unity. Consumers reference it from `Packages/manifest.json` by path (see below);
+`tools\update-unity-plugin.ps1` rebuilds the core DLL into its `Runtime/Plugins`.
+
+**Naming.** Engine packages carry the engine as a suffix: MindAttic.Media.Capture.Unity and
+MindAttic.Media.Capture.Unreal. The Unity package id stays `com.mindattic.media.capture`, as does its folder: about
+twelve Unity projects were pointed at that id and path in M.CAPT-T167, and renaming it again would mean another
+`manifest.json` and `packages-lock.json` edit and re-import in each for no runtime gain. UPM ids are lowercase
+reverse-DNS names of the product, and this package can only be the Unity one. The suffix already appears where code
+sees it: the asmdefs `MindAttic.Media.Capture.Unity` (`.Editor`, `.Tests`) and the namespace
+`MindAttic.Media.Capture.Unity`.
+
 ## Formerly MindAttic.Capture
 
 The repo, projects, packages, namespaces and Unity package were renamed to MindAttic.Media.Capture
