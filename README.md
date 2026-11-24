@@ -352,12 +352,12 @@ Capture is a development tool and stays out of shipped builds:
 ## Development
 
 ```
-dotnet build MindAttic.Capture.slnx
-dotnet test  MindAttic.Capture.slnx      # engine and desktop tests need ffmpeg and an interactive desktop
+dotnet build MindAttic.Media.Capture.slnx
+dotnet test  MindAttic.Media.Capture.slnx      # engine and desktop tests need ffmpeg and an interactive desktop
 ```
 
 Source layout: `src\` holds the core, Windows, Wpf, WebView2, Agent and Tray projects; `tests\` holds
-`MindAttic.Capture.Tests` and `MindAttic.Capture.Windows.Tests`; `unity\` is the Unity package and `js\`
+`MindAttic.Media.Capture.Tests` and `MindAttic.Media.Capture.Windows.Tests`; `unity\` is the Unity package and `js\`
 the JavaScript client. `capture recover` with no root also scans the fallback output folder.
 
 ## Documentation

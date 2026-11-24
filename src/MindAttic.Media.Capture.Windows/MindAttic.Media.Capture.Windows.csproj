@@ -3,15 +3,16 @@
   <PropertyGroup>
     <TargetFramework>net10.0-windows10.0.19041.0</TargetFramework>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-    <PackageId>MindAttic.Capture.Windows</PackageId>
+    <PackageId>MindAttic.Media.Capture.Windows</PackageId>
+    <RootNamespace>MindAttic.Capture.Windows</RootNamespace>
     <!-- HOUSE-LAW-1: whole-number versions only; bump the major. -->
     <Version>1.0.0</Version>
-    <Description>Windows desktop capture for MindAttic.Capture: monitors, regions and windows (Windows Graphics Capture, Desktop Duplication, GDI), WASAPI audio, global hotkeys, DI wiring.</Description>
+    <Description>Windows desktop capture for MindAttic.Media.Capture: monitors, regions and windows (Windows Graphics Capture, Desktop Duplication, GDI), WASAPI audio, global hotkeys, DI wiring.</Description>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\MindAttic.Capture\MindAttic.Capture.csproj" />
+    <ProjectReference Include="..\MindAttic.Media.Capture\MindAttic.Media.Capture.csproj" />
   </ItemGroup>
 
   <ItemGroup>
@@ -24,7 +25,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <InternalsVisibleTo Include="MindAttic.Capture.Windows.Tests" />
+    <InternalsVisibleTo Include="MindAttic.Media.Capture.Windows.Tests" />
     <InternalsVisibleTo Include="capture" />
   </ItemGroup>
 

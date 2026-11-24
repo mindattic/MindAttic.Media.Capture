@@ -12,9 +12,9 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\MindAttic.Capture.Windows\MindAttic.Capture.Windows.csproj" />
-    <ProjectReference Include="..\MindAttic.Capture.Sets\MindAttic.Capture.Sets.csproj" />
-    <ProjectReference Include="..\MindAttic.Capture.Web\MindAttic.Capture.Web.csproj" />
+    <ProjectReference Include="..\MindAttic.Media.Capture.Windows\MindAttic.Media.Capture.Windows.csproj" />
+    <ProjectReference Include="..\MindAttic.Media.Capture.Sets\MindAttic.Media.Capture.Sets.csproj" />
+    <ProjectReference Include="..\MindAttic.Media.Capture.Web\MindAttic.Media.Capture.Web.csproj" />
     <!-- agent.json lives under VaultPaths.LocalApp("Capture"), so MINDATTIC_VAULT_LOCAL_ROOT relocates it. -->
     <PackageReference Include="MindAttic.Vault" Version="8.0.0" />
     <!-- capture mcp: a stdio MCP server, pinned to the versions already used elsewhere (e.g. GridGame.Studio.Mcp). -->
@@ -23,7 +23,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <InternalsVisibleTo Include="MindAttic.Capture.Windows.Tests" />
+    <InternalsVisibleTo Include="MindAttic.Media.Capture.Windows.Tests" />
   </ItemGroup>
 
 </Project>

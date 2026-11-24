@@ -1,0 +1,16 @@
+﻿<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/MindAttic.Media.Capture/MindAttic.Media.Capture.csproj" />
+    <Project Path="src/MindAttic.Media.Capture.Sets/MindAttic.Media.Capture.Sets.csproj" />
+    <Project Path="src/MindAttic.Media.Capture.Windows/MindAttic.Media.Capture.Windows.csproj" />
+    <Project Path="src/MindAttic.Media.Capture.Agent/MindAttic.Media.Capture.Agent.csproj" />
+    <Project Path="src/MindAttic.Media.Capture.Tray/MindAttic.Media.Capture.Tray.csproj" />
+    <Project Path="src/MindAttic.Media.Capture.Wpf/MindAttic.Media.Capture.Wpf.csproj" />
+    <Project Path="src/MindAttic.Media.Capture.WebView2/MindAttic.Media.Capture.WebView2.csproj" />
+    <Project Path="src/MindAttic.Media.Capture.Web/MindAttic.Media.Capture.Web.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/MindAttic.Media.Capture.Tests/MindAttic.Media.Capture.Tests.csproj" />
+    <Project Path="tests/MindAttic.Media.Capture.Windows.Tests/MindAttic.Media.Capture.Windows.Tests.csproj" />
+  </Folder>
+</Solution>

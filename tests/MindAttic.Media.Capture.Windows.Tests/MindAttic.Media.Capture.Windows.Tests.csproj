@@ -3,6 +3,7 @@
   <PropertyGroup>
     <TargetFramework>net10.0-windows10.0.19041.0</TargetFramework>
     <IsPackable>false</IsPackable>
+    <RootNamespace>MindAttic.Capture.Windows.Tests</RootNamespace>
     <UseWPF>true</UseWPF>
     <MSBuildWarningsAsMessages>MSB3277</MSBuildWarningsAsMessages>
   </PropertyGroup>
@@ -14,10 +15,10 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\src\MindAttic.Capture.Windows\MindAttic.Capture.Windows.csproj" />
-    <ProjectReference Include="..\..\src\MindAttic.Capture.Agent\MindAttic.Capture.Agent.csproj" />
-    <ProjectReference Include="..\..\src\MindAttic.Capture.WebView2\MindAttic.Capture.WebView2.csproj" />
-    <ProjectReference Include="..\..\src\MindAttic.Capture.Tray\MindAttic.Capture.Tray.csproj" />
+    <ProjectReference Include="..\..\src\MindAttic.Media.Capture.Windows\MindAttic.Media.Capture.Windows.csproj" />
+    <ProjectReference Include="..\..\src\MindAttic.Media.Capture.Agent\MindAttic.Media.Capture.Agent.csproj" />
+    <ProjectReference Include="..\..\src\MindAttic.Media.Capture.WebView2\MindAttic.Media.Capture.WebView2.csproj" />
+    <ProjectReference Include="..\..\src\MindAttic.Media.Capture.Tray\MindAttic.Media.Capture.Tray.csproj" />
   </ItemGroup>
 
 </Project>

@@ -10,7 +10,7 @@ $bin = Join-Path $env:LOCALAPPDATA 'MindAttic\Capture\bin'
 $stage = Join-Path ([IO.Path]::GetTempPath()) ("mindattic-capture-install-" + [guid]::NewGuid().ToString('N'))
 New-Item -ItemType Directory -Force $bin, $stage | Out-Null
 try {
-    foreach ($p in @('MindAttic.Capture.Agent', 'MindAttic.Capture.Tray')) {
+    foreach ($p in @('MindAttic.Media.Capture.Agent', 'MindAttic.Media.Capture.Tray')) {
         dotnet publish (Join-Path $root "src\$p\$p.csproj") -c Release -o $stage --nologo -v q
         if ($LASTEXITCODE -ne 0) { throw "publish $p failed" }
     }
