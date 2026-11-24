@@ -13,6 +13,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\src\MindAttic.Capture\MindAttic.Capture.csproj" />
+    <ProjectReference Include="..\..\src\MindAttic.Capture.Sets\MindAttic.Capture.Sets.csproj" />
   </ItemGroup>
 
 </Project>

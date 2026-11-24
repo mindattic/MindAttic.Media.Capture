@@ -2,7 +2,6 @@ using System.ComponentModel;
 using System.Diagnostics;
 using System.IO.Pipes;
 using System.Text;
-using System.Text.Json;
 
 namespace MindAttic.Capture.Sets;
 
@@ -20,28 +19,34 @@ public enum PreviewShown
 }
 
 /// <summary>What a MediaViewer is asked to show: a set (or file) and the item to select.</summary>
-public sealed record PreviewRequest(string Set, string? Select = null);
+public sealed record PreviewRequest(string Set, string? Select = null)
+{
+    /// <summary>The Viewer command line that asks for this: <c>&lt;set&gt; [--select FILE]</c>.</summary>
+    public string[] ToArgs() => string.IsNullOrEmpty(Select) ? [Set] : [Set, "--select", Select!];
+}
 
 /// <summary>
-/// The single-instance handoff between agents and MindAttic.MediaViewer: the running Viewer listens on a per-session
-/// named pipe (<see cref="PipeName"/>, current user only); a client connects, writes one <see cref="PreviewRequest"/>
-/// as UTF-8 JSON and closes. The Viewer comes to the front and shows the set.
+/// The MediaViewer's own single-instance handoff (M.MVIEW-T7): the running Viewer listens on <see cref="PipeName"/>
+/// (this Windows user only) for a later launch's command line, one argument per UTF-8 line ended by an empty line, and
+/// shows it as if it had been launched with it.
 /// </summary>
 public static class PreviewHandoff
 {
-    /// <summary>The pipe the Viewer open in this Windows session listens on.</summary>
-    public static string PipeName { get; } = $"MindAttic.MediaViewer.{Process.GetCurrentProcess().SessionId}";
+    /// <summary>The pipe the running Viewer listens on for this Windows user.</summary>
+    public static string PipeName { get; } = "mindattic-mediaviewer-cli-" + UserPart(Environment.UserName);
 
-    private static readonly TimeSpan ReadTimeout = TimeSpan.FromSeconds(5);
+    /// <summary>What goes down the pipe for <paramref name="request"/>: each argument on its own line, then an empty line.</summary>
+    public static string Payload(PreviewRequest request) =>
+        string.Concat(request.ToArgs().Select(a => a + "\n")) + "\n";
 
     /// <summary>Hands <paramref name="request"/> to the running Viewer. False when none answers within <paramref name="timeout"/>.</summary>
     public static bool Send(PreviewRequest request, TimeSpan timeout, string? pipeName = null)
     {
         try
         {
-            using var pipe = new NamedPipeClientStream(".", pipeName ?? PipeName, PipeDirection.Out);
+            using var pipe = new NamedPipeClientStream(".", pipeName ?? PipeName, PipeDirection.Out, PipeOptions.CurrentUserOnly);
             pipe.Connect((int)timeout.TotalMilliseconds);
-            var bytes = JsonSerializer.SerializeToUtf8Bytes(request, PreviewJson.Options);
+            var bytes = new UTF8Encoding(false).GetBytes(Payload(request));
             pipe.Write(bytes, 0, bytes.Length);
             pipe.Flush();
             return true;
@@ -52,37 +57,7 @@ public static class PreviewHandoff
         }
     }
 
-    /// <summary>
-    /// The Viewer's side: listens until <paramref name="stop"/> is cancelled, calling <paramref name="received"/> with each
-    /// request (on the thread pool: marshal to the UI thread yourself). Malformed or silent clients are dropped.
-    /// </summary>
-    public static async Task ListenAsync(Action<PreviewRequest> received, CancellationToken stop, string? pipeName = null)
-    {
-        while (!stop.IsCancellationRequested)
-        {
-            try
-            {
-                await using var pipe = new NamedPipeServerStream(pipeName ?? PipeName, PipeDirection.In, 1,
-                    PipeTransmissionMode.Byte, PipeOptions.Asynchronous | PipeOptions.CurrentUserOnly);
-                await pipe.WaitForConnectionAsync(stop).ConfigureAwait(false);
-                using var reader = new StreamReader(pipe, Encoding.UTF8);
-                using var slow = CancellationTokenSource.CreateLinkedTokenSource(stop);
-                slow.CancelAfter(ReadTimeout);
-                string text;
-                try { text = await reader.ReadToEndAsync(slow.Token).ConfigureAwait(false); }
-                catch (OperationCanceledException) when (!stop.IsCancellationRequested) { continue; }
-                PreviewRequest? request = null;
-                try { request = JsonSerializer.Deserialize<PreviewRequest>(text, PreviewJson.Options); }
-                catch (JsonException) { }
-                if (request is { Set.Length: > 0 }) received(request);
-            }
-            catch (OperationCanceledException) { return; }
-            catch (IOException)
-            {
-                try { await Task.Delay(500, stop).ConfigureAwait(false); } catch (OperationCanceledException) { return; }
-            }
-        }
-    }
+    private static string UserPart(string userName) => new(userName.Select(c => char.IsLetterOrDigit(c) ? c : '-').ToArray());
 }
 
 /// <summary>
@@ -102,18 +77,14 @@ public static class PreviewLauncher
     public static PreviewShown Show(string setDir, string? select = null)
     {
         setDir = Path.GetFullPath(setDir);
-        if (PreviewHandoff.Send(new PreviewRequest(setDir, select), TimeSpan.FromMilliseconds(300))) return PreviewShown.Pipe;
+        var request = new PreviewRequest(setDir, select);
+        if (PreviewHandoff.Send(request, TimeSpan.FromMilliseconds(300))) return PreviewShown.Pipe;
         if (!Environment.UserInteractive) return PreviewShown.None;
 
         if (File.Exists(ViewerPath))
         {
             var psi = new ProcessStartInfo(ViewerPath) { UseShellExecute = false, WorkingDirectory = Path.GetDirectoryName(ViewerPath)! };
-            psi.ArgumentList.Add(setDir);
-            if (!string.IsNullOrEmpty(select))
-            {
-                psi.ArgumentList.Add("--select");
-                psi.ArgumentList.Add(select!);
-            }
+            foreach (var arg in request.ToArgs()) psi.ArgumentList.Add(arg);
             if (TryStart(psi)) return PreviewShown.Launched;
         }
 
