@@ -1,7 +1,7 @@
-using MindAttic.Capture.Unity;
+using MindAttic.Media.Capture.Unity;
 using NUnit.Framework;
 
-namespace MindAttic.Capture.Unity.Tests
+namespace MindAttic.Media.Capture.Unity.Tests
 {
     public class HotkeyBindingTests
     {

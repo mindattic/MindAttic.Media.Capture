@@ -3,10 +3,10 @@ using System.IO;
 using System.Linq;
 using UnityEngine;
 
-namespace MindAttic.Capture.Unity
+namespace MindAttic.Media.Capture.Unity
 {
     /// <summary>
-    /// MindAttic.Capture for Unity. Off unless you ask: no environment variable, no auto-loaded
+    /// MindAttic.Media.Capture for Unity. Off unless you ask: no environment variable, no auto-loaded
     /// project config — only the literal <c>-capture</c> flag on the command line turns it on, in the
     /// Windows editor and in capture-enabled Windows players:
     /// <list type="bullet">

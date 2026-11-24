@@ -4,7 +4,7 @@ using System.IO;
 using UnityEditor;
 using UnityEngine;
 
-namespace MindAttic.Capture.Unity.Editor
+namespace MindAttic.Media.Capture.Unity.Editor
 {
     /// <summary>MindAttic ▸ Capture: the editor equivalent of -capture video / -capture screen N for Play Mode.</summary>
     [InitializeOnLoad]

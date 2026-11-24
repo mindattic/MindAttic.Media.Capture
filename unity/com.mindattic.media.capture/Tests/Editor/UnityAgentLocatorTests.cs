@@ -1,9 +1,9 @@
 using System;
 using System.IO;
-using MindAttic.Capture.Unity;
+using MindAttic.Media.Capture.Unity;
 using NUnit.Framework;
 
-namespace MindAttic.Capture.Unity.Tests
+namespace MindAttic.Media.Capture.Unity.Tests
 {
     public class UnityAgentLocatorTests
     {
@@ -21,7 +21,7 @@ namespace MindAttic.Capture.Unity.Tests
         {
             var agentExe = Environment.GetEnvironmentVariable("MAC_T9_AGENT_EXE");
             if (string.IsNullOrEmpty(agentExe) || !File.Exists(agentExe))
-                Assert.Ignore("MAC_T9_AGENT_EXE must point at a built capture.exe (dotnet build src/MindAttic.Capture.Agent first).");
+                Assert.Ignore("MAC_T9_AGENT_EXE must point at a built capture.exe (dotnet build src/MindAttic.Media.Capture.Agent first).");
 
             Environment.SetEnvironmentVariable(OverrideVar, agentExe);
             Assert.That(UnityAgentLocator.Find(), Is.EqualTo(agentExe));

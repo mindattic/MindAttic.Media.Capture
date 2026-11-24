@@ -38,7 +38,7 @@ Programmatic video capture and screenshots for MindAttic games and apps: trailer
 | `MindAttic.Capture.WebView2` | net10.0-windows10.0.19041 | `window.mindattic.capture` JavaScript bridge for any WebView2. |
 | `MindAttic.Capture.Sets` | net10.0 | Preview sets: `preview.json` model, store (create, list, import under a per-set lock), media kinds, MediaViewer handoff. |
 | `capture.exe` (agent) | net10.0-windows10.0.19041 | CLI and localhost API: record any app with no code changes, serve browser pages and scripts, finalize and recover sessions. |
-| `com.mindattic.capture` (Unity) | Unity 6, Windows | Game-view capture via GPU readback, game audio, Play Mode menu; reads `-capture` from the player command line. |
+| `com.mindattic.media.capture` (Unity) | Unity 6, Windows | Game-view capture via GPU readback, game audio, Play Mode menu; reads `-capture` from the player command line. |
 
 The agent and the tray recorder are installed together (see Install and deploy below). With the agent installed, apps hand their session export to it and exit immediately.
 
@@ -142,7 +142,7 @@ The app's project needs `net10.0-windows10.0.19041.0` (or later) and `MINDATTIC_
 `DefineConstants` for `Capture.Raise` hooks. Automata is the worked example.
 
 **Unity game:** add to `Packages/manifest.json`
-`"com.mindattic.capture": "file:../../MindAttic.Capture/unity/com.mindattic.capture"`. Players
+`"com.mindattic.media.capture": "file:../../MindAttic.Capture/unity/com.mindattic.media.capture"`. Players
 then honor `-capture video` / `-capture screen 5` and nothing else — there is no project config
 auto-loaded from StreamingAssets, so a plain launch never has capture silently on or off by
 surprise; in the editor use **MindAttic ▸ Capture** to record Play Mode. Game code raises events
@@ -329,9 +329,9 @@ Capture is a development tool and stays out of shipped builds:
     define, output `Builds/Capture/`).
   - Normal production players ignore `-capture` (one log line) and never start ffmpeg.
   - Unity projects reference the package by path
-    (`file:../../MindAttic.Capture/unity/com.mindattic.capture`), which needs this repo checked out next
+    (`file:../../MindAttic.Capture/unity/com.mindattic.media.capture`), which needs this repo checked out next
     to them, the same as any sibling-repo dependency here. Once the repo is pushed it can be switched to
-    `https://github.com/mindattic/MindAttic.Capture.git?path=/unity/com.mindattic.capture#<tag>` if you
+    `https://github.com/mindattic/MindAttic.Capture.git?path=/unity/com.mindattic.media.capture#<tag>` if you
     prefer pinned versions.
   - After changing the core, run `tools\update-unity-plugin.ps1`.
 

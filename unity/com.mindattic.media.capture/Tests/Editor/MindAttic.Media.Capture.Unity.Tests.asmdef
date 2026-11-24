@@ -1,8 +1,8 @@
 {
-    "name": "MindAttic.Capture.Unity.Tests",
-    "rootNamespace": "MindAttic.Capture.Unity.Tests",
+    "name": "MindAttic.Media.Capture.Unity.Tests",
+    "rootNamespace": "MindAttic.Media.Capture.Unity.Tests",
     "references": [
-        "MindAttic.Capture.Unity",
+        "MindAttic.Media.Capture.Unity",
         "UnityEngine.TestRunner",
         "UnityEditor.TestRunner"
     ],

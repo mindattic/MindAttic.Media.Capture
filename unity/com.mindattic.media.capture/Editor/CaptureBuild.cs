@@ -6,7 +6,7 @@ using UnityEditor.Build;
 using UnityEditor.Build.Reporting;
 using UnityEngine;
 
-namespace MindAttic.Capture.Unity.Editor
+namespace MindAttic.Media.Capture.Unity.Editor
 {
     /// <summary>
     /// Capture-enabled Windows players (MINDATTIC_CAPTURE define) alongside the project's normal production builds,
@@ -18,7 +18,7 @@ namespace MindAttic.Capture.Unity.Editor
 
         /// <summary>
         /// Builds the enabled scenes to Builds/Capture/{project}.exe with capture compiled in.
-        /// Batch: -executeMethod MindAttic.Capture.Unity.Editor.CaptureBuild.BuildWindows
+        /// Batch: -executeMethod MindAttic.Media.Capture.Unity.Editor.CaptureBuild.BuildWindows
         /// </summary>
         [MenuItem("MindAttic/Capture/Build Windows Player (Capture Enabled)", priority = 60)]
         public static void BuildWindows()

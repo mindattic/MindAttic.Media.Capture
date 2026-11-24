@@ -1,11 +1,11 @@
 using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
-using MindAttic.Capture.Hosting;
-using MindAttic.Capture.Unity;
+using MindAttic.Media.Capture.Hosting;
+using MindAttic.Media.Capture.Unity;
 using NUnit.Framework;
 
-namespace MindAttic.Capture.Unity.Tests
+namespace MindAttic.Media.Capture.Unity.Tests
 {
     public class GameAudioTrackTests
     {

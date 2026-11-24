@@ -6,7 +6,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
-using MindAttic.Capture.Hosting;
+using MindAttic.Media.Capture.Hosting;
 using Unity.Collections;
 using UnityEngine;
 using UnityEngine.Rendering;
@@ -14,7 +14,7 @@ using UnityEngine.Rendering;
 using UnityEngine.InputSystem;
 #endif
 
-namespace MindAttic.Capture.Unity
+namespace MindAttic.Media.Capture.Unity
 {
     /// <summary>
     /// The Unity capture host. Grabs the final game frame (UI included) at the end of each frame with

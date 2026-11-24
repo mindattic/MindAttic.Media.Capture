@@ -1,6 +1,6 @@
 {
-    "name": "MindAttic.Capture.Unity",
-    "rootNamespace": "MindAttic.Capture.Unity",
+    "name": "MindAttic.Media.Capture.Unity",
+    "rootNamespace": "MindAttic.Media.Capture.Unity",
     "references": [
         "Unity.InputSystem"
     ],

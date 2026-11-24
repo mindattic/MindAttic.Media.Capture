@@ -1,8 +1,8 @@
 {
-    "name": "MindAttic.Capture.Unity.Editor",
-    "rootNamespace": "MindAttic.Capture.Unity.Editor",
+    "name": "MindAttic.Media.Capture.Unity.Editor",
+    "rootNamespace": "MindAttic.Media.Capture.Unity.Editor",
     "references": [
-        "MindAttic.Capture.Unity"
+        "MindAttic.Media.Capture.Unity"
     ],
     "includePlatforms": [
         "Editor"

@@ -1,13 +1,13 @@
 using System;
 using System.Diagnostics;
 using System.IO;
-using MindAttic.Capture.Hosting;
+using MindAttic.Media.Capture.Hosting;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
 using Newtonsoft.Json.Serialization;
 using UnityEngine;
 
-namespace MindAttic.Capture.Unity
+namespace MindAttic.Media.Capture.Unity
 {
     /// <summary>Newtonsoft JSON for the core (System.Text.Json is not available to Unity's netstandard2.1 build).</summary>
     public sealed class NewtonsoftCaptureJson : ICaptureJson
