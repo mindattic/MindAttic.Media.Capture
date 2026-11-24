@@ -17,7 +17,7 @@ internal sealed class AgentArgs
     private static readonly HashSet<string> Flags = new(StringComparer.OrdinalIgnoreCase)
     {
         "hq", "lossless", "gdi", "no-wgc", "separate-audio", "verbose", "no-hotkeys", "help", "self", "clipboard",
-        "json", "no-launch", "copy", "move", "full-page", "dark", "fake-media",
+        "json", "no-launch", "copy", "move", "full-page", "dark", "fake-media", "apply",
     };
 
     public static AgentArgs Parse(IReadOnlyList<string> args)

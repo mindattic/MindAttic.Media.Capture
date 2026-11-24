@@ -2,6 +2,7 @@ using System.Diagnostics;
 using MindAttic.Media.Capture;
 using MindAttic.Media.Capture.Agent;
 using MindAttic.Media.Capture.Hosting;
+using MindAttic.Media.Capture.Output;
 using MindAttic.Media.Capture.Sets;
 using MindAttic.Media.Capture.Windows;
 using MindAttic.Media.Capture.Windows.Native;
@@ -50,6 +51,7 @@ namespace MindAttic.Media.Capture.Agent
                     "save" => Signal(SaveEventName, "save"),
                     "finalize" => await FinalizeAsync(args, log),
                     "recover" => await RecoverAsync(args, log),
+                    "migrate-roots" => MigrateRoots(args),
                     _ => Help(),
                 };
             }
@@ -90,6 +92,9 @@ namespace MindAttic.Media.Capture.Agent
                                                            record-stop, record-pause, record-resume, clip, save-replay,
                                                            command, note, quit (docs/design/engine-host.md)
                   capture recover [root]                   export sessions left behind by crashed apps
+                  capture migrate-roots [--apply] [--from-capture DIR --to-capture DIR --from-preview DIR --to-preview DIR]
+                                                           move R:\MindAttic\Capture and \Preview into R:\MindAttic\Media
+                                                           (dry run unless --apply; never deletes or overwrites)
 
                 target:  --self | --monitor N | --region x,y,w,h | --window "title" | --hwnd 0x1234 | --process name
                          --self: the window hosting this CLI (the app embedding it, or the terminal when run solo)
@@ -275,6 +280,33 @@ namespace MindAttic.Media.Capture.Agent
             if (string.Equals(defaults.OutputRoot, CaptureOptions.DefaultOutputRoot, StringComparison.OrdinalIgnoreCase)) // LEGACY-ROOT
                 roots.Add(legacyRoot); // LEGACY-ROOT
             return roots.Distinct(StringComparer.OrdinalIgnoreCase).ToList();
+        }
+
+        /// <summary>Moves the old Capture and Preview roots into the Media roots; a dry run unless --apply.</summary>
+        private static int MigrateRoots(AgentArgs args)
+        {
+            var apply = args.Has("apply");
+            var pairs = new[]
+            {
+                (args.Get("from-capture") ?? CaptureOptions.LegacyOutputRoot, args.Get("to-capture") ?? CaptureOptions.DefaultOutputRoot), // LEGACY-ROOT
+                (args.Get("from-preview") ?? PreviewSetStore.LegacyRoot, args.Get("to-preview") ?? PreviewSetStore.DefaultRoot), // LEGACY-ROOT
+            };
+            int moved = 0, skipped = 0;
+            foreach (var (from, to) in pairs)
+            {
+                var report = RootMigration.Run(from, to, apply);
+                Console.WriteLine($"{report.From} -> {report.To}");
+                if (!Directory.Exists(report.From)) Console.WriteLine("  (no old root)");
+                else if (report.Moved.Count == 0 && report.Skipped.Count == 0) Console.WriteLine("  nothing to move");
+                foreach (var m in report.Moved) Console.WriteLine($"  {(apply ? "moved" : "move")}  {Path.GetRelativePath(report.From, m.From)}");
+                foreach (var s in report.Skipped) Console.WriteLine($"  skip   {Path.GetRelativePath(report.From, s.From)}  ({s.Reason})");
+                foreach (var w in report.Warnings) Console.WriteLine($"  warn   {w}");
+                if (report.Marker is not null) Console.WriteLine($"  marker {report.Marker}");
+                moved += report.Moved.Count;
+                skipped += report.Skipped.Count;
+            }
+            Console.WriteLine(apply ? $"Moved {moved}, skipped {skipped}." : $"Would move {moved}, skip {skipped}. Dry run: pass --apply to move.");
+            return 0;
         }
 
         private static int Signal(string name, string what)
