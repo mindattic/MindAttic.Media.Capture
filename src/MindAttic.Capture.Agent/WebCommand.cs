@@ -13,6 +13,15 @@ internal static class WebCommand
 {
     public static async Task<int> RunAsync(AgentArgs args, ICaptureLog log)
     {
+        var files = await CaptureAsync(args, log);
+        foreach (var file in files) Console.WriteLine(file);
+        return 0;
+    }
+
+    /// <summary>The shared logic behind <c>capture web</c>: used by the CLI and directly by <c>capture mcp</c>'s
+    /// capture_web tool, which returns the file paths as structured data instead of console lines.</summary>
+    public static async Task<IReadOnlyList<string>> CaptureAsync(AgentArgs args, ICaptureLog log)
+    {
         var url = args.Positional.FirstOrDefault() ?? throw new CaptureException(CaptureError.InvalidArgument, "web needs a URL.");
         var host = Uri.TryCreate(url, UriKind.Absolute, out var uri) ? uri.Host : "web";
         var options = new WebCaptureOptions
@@ -29,9 +38,7 @@ internal static class WebCommand
             Channel = args.Get("channel") ?? "msedge",
         };
 
-        var files = args.Get("set") is { } set ? await IntoSetAsync(args, options, set, host, log) : await IntoFolderAsync(args, options, host, log);
-        foreach (var file in files) Console.WriteLine(file);
-        return 0;
+        return args.Get("set") is { } set ? await IntoSetAsync(args, options, set, host, log) : await IntoFolderAsync(args, options, host, log);
     }
 
     private static async Task<IReadOnlyList<string>> IntoSetAsync(AgentArgs args, WebCaptureOptions options, string set, string host, ICaptureLog log)

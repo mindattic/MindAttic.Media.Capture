@@ -35,13 +35,14 @@ namespace MindAttic.Capture.Agent
                 {
                     "monitors" => Monitors(),
                     "windows" => Windows(args),
-                    "shot" or "screenshot" => await ShotAsync(args, log),
+                    "shot" or "screenshot" => await ScreenCommand.ShotAsync(args, log),
                     "record" => await RecordAsync(args, log),
                     "replay" => await ReplayAsync(args, log),
                     "run" => await RunAsync(args, log),
                     "serve" => await ServeAsync(args, log),
                     "set" => SetCommands.Run(args, log),
                     "web" => await WebCommand.RunAsync(args, log),
+                    "mcp" => await McpCommand.RunAsync(args, log),
                     "raise" => await ApiClient.RaiseAsync(args),
                     "stop" => Signal(StopEventName, "stop"),
                     "save" => Signal(SaveEventName, "save"),
@@ -78,6 +79,8 @@ namespace MindAttic.Capture.Agent
                   capture set show <dir> [--select FILE] [--no-launch]   prints pipe|launched|photos|none
                   capture web <url> [--viewport WxH] [--device NAME] [--full-page] [--wait-for SEL] [--wait Ns]
                                    [--dark] [--fake-media] [--video Ns] [--set <dir>]   screenshot/record a page (Playwright, installed Edge)
+                  capture mcp                              stdio MCP server: preview_new_set, capture_web, capture_screen,
+                                                            add_file, show, list_sets
                   capture recover [root]                   export sessions left behind by crashed apps
 
                 target:  --self | --monitor N | --region x,y,w,h | --window "title" | --hwnd 0x1234 | --process name
@@ -108,47 +111,11 @@ namespace MindAttic.Capture.Agent
             return 0;
         }
 
-        private static CaptureOptions Options(AgentArgs args, ICaptureLog log, string defaultApp)
+        internal static CaptureOptions Options(AgentArgs args, ICaptureLog log, string defaultApp)
         {
             var o = new CaptureOptions { AppName = defaultApp, AppVersion = null, Log = log };
             args.ApplyCommon(o);
             return o;
-        }
-
-        private static async Task<int> ShotAsync(AgentArgs args, ICaptureLog log)
-        {
-            var o = Options(args, log, "Desktop");
-            var staging = SetCommands.Stage(args, o);
-            var target = args.Target();
-            // The host remembers the frame it handed the engine, so --clipboard copies exactly the saved shot
-            // rather than a second, later capture of the target.
-            var host = new FrameRememberingHost(new DesktopCaptureHost(target, args.HostOptions()));
-            CaptureResult result;
-            await using (var engine = await CaptureEngine.StartNewAsync(host, o))
-            {
-                result = await engine.ScreenshotAsync(args.Get("tag") ?? target.Label, new ScreenshotOptions { Format = args.ImageFormat() });
-                if (result.Succeeded && args.Has("clipboard") && host.LastStill is { } frame)
-                    ClipboardWriter.SetImage(frame);
-            }
-            return staging is null ? Report(result) : SetCommands.Finish(args, result, staging, ScreenSource(args, target), log);
-        }
-
-        /// <summary>Passes everything through to <paramref name="inner"/>, keeping the last still it captured.</summary>
-        private sealed class FrameRememberingHost(ICaptureHost inner) : ICaptureHost
-        {
-            public CapturedImage? LastStill { get; private set; }
-            public string Name => inner.Name;
-            public HostCapabilities Capabilities => inner.Capabilities;
-
-            public async ValueTask<CapturedImage> CaptureStillAsync(ScreenshotOptions options, CancellationToken ct)
-            {
-                var image = await inner.CaptureStillAsync(options, ct).ConfigureAwait(false);
-                LastStill = image;
-                return image;
-            }
-
-            public VideoSource CreateVideoSource(int fps) => inner.CreateVideoSource(fps);
-            public IReadOnlyList<IAudioTrackCapture> CreateAudioTracks(AudioMode mode) => inner.CreateAudioTracks(mode);
         }
 
         private static async Task<int> RecordAsync(AgentArgs args, ICaptureLog log)
@@ -171,7 +138,7 @@ namespace MindAttic.Capture.Agent
             return staging is null ? Report(result) : SetCommands.Finish(args, result, staging, ScreenSource(args, target), log);
         }
 
-        private static PreviewSource ScreenSource(AgentArgs args, CaptureTarget target) =>
+        internal static PreviewSource ScreenSource(AgentArgs args, CaptureTarget target) =>
             new() { Type = args.Has("window") || args.Has("hwnd") || args.Has("process") || args.Has("self") ? "window" : "screen", Target = target.Label };
 
         private static async Task<int> ReplayAsync(AgentArgs args, ICaptureLog log)
@@ -357,7 +324,7 @@ namespace MindAttic.Capture.Agent
             return tcs.Task;
         }
 
-        private static int Report(CaptureResult result)
+        internal static int Report(CaptureResult result)
         {
             if (result.Succeeded)
             {

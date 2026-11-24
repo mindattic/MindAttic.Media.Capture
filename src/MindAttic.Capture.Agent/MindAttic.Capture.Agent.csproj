@@ -17,6 +17,9 @@
     <ProjectReference Include="..\MindAttic.Capture.Web\MindAttic.Capture.Web.csproj" />
     <!-- agent.json lives under VaultPaths.LocalApp("Capture"), so MINDATTIC_VAULT_LOCAL_ROOT relocates it. -->
     <PackageReference Include="MindAttic.Vault" Version="8.0.0" />
+    <!-- capture mcp: a stdio MCP server, pinned to the versions already used elsewhere (e.g. GridGame.Studio.Mcp). -->
+    <PackageReference Include="ModelContextProtocol" Version="2.3.0" />
+    <PackageReference Include="Microsoft.Extensions.Hosting" Version="10.0.15" />
   </ItemGroup>
 
   <ItemGroup>

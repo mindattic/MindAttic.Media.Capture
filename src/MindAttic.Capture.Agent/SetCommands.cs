@@ -99,18 +99,34 @@ internal static class SetCommands
     /// <summary>Imports a finished capture from its staging folder into the set, prints the new paths, removes the staging folder.</summary>
     public static int Finish(AgentArgs args, CaptureResult result, string staging, PreviewSource source, ICaptureLog log)
     {
+        if (!result.Succeeded)
+        {
+            CleanupStaging(staging);
+            Console.Error.WriteLine($"error: {result.Error}");
+            return (int)CaptureError.CaptureFailed;
+        }
+        var set = Path.GetFullPath(args.Require("set"));
+        foreach (var item in FinishImport(args, result, staging, source, log)) Console.WriteLine(Path.Combine(set, item.File));
+        return 0;
+    }
+
+    /// <summary>Removes a staging folder <see cref="Stage"/> made, for a capture that never reached <see cref="FinishImport"/>.</summary>
+    public static void CleanupStaging(string staging)
+    {
+        TryDelete(staging);
+        TryDelete(Path.GetDirectoryName(staging)!, onlyIfEmpty: true);
+    }
+
+    /// <summary>Imports a finished, successful capture from its staging folder into the set and removes the staging
+    /// folder; used by <see cref="Finish"/> and directly by <c>capture mcp</c>'s capture_screen tool, which returns
+    /// the items as structured data instead of console lines.</summary>
+    public static IReadOnlyList<PreviewItem> FinishImport(AgentArgs args, CaptureResult result, string staging, PreviewSource source, ICaptureLog log)
+    {
         var set = Path.GetFullPath(args.Require("set"));
         try
         {
-            if (!result.Succeeded)
-            {
-                Console.Error.WriteLine($"error: {result.Error}");
-                return (int)CaptureError.CaptureFailed;
-            }
             var store = new PreviewSetStore(log: log);
-            var items = store.Import(set, result.Files.ToList(), args.Get("tag") ?? result.Tag, args.Get("caption"), source, ImportMode.Move);
-            foreach (var item in items) Console.WriteLine(Path.Combine(set, item.File));
-            return 0;
+            return store.Import(set, result.Files.ToList(), args.Get("tag") ?? result.Tag, args.Get("caption"), source, ImportMode.Move);
         }
         finally
         {
