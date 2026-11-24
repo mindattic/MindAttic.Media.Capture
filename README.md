@@ -142,7 +142,7 @@ The app's project needs `net10.0-windows10.0.19041.0` (or later) and `MINDATTIC_
 `DefineConstants` for `Capture.Raise` hooks. Automata is the worked example.
 
 **Unity game:** add to `Packages/manifest.json`
-`"com.mindattic.media.capture": "file:../../MindAttic.Capture/unity/com.mindattic.media.capture"`. Players
+`"com.mindattic.media.capture": "file:../../MindAttic.Media.Capture/unity/com.mindattic.media.capture"`. Players
 then honor `-capture video` / `-capture screen 5` and nothing else — there is no project config
 auto-loaded from StreamingAssets, so a plain launch never has capture silently on or off by
 surprise; in the editor use **MindAttic ▸ Capture** to record Play Mode. Game code raises events
@@ -329,9 +329,9 @@ Capture is a development tool and stays out of shipped builds:
     define, output `Builds/Capture/`).
   - Normal production players ignore `-capture` (one log line) and never start ffmpeg.
   - Unity projects reference the package by path
-    (`file:../../MindAttic.Capture/unity/com.mindattic.media.capture`), which needs this repo checked out next
+    (`file:../../MindAttic.Media.Capture/unity/com.mindattic.media.capture`), which needs this repo checked out next
     to them, the same as any sibling-repo dependency here. Once the repo is pushed it can be switched to
-    `https://github.com/mindattic/MindAttic.Capture.git?path=/unity/com.mindattic.media.capture#<tag>` if you
+    `https://github.com/mindattic/MindAttic.Media.Capture.git?path=/unity/com.mindattic.media.capture#<tag>` if you
     prefer pinned versions.
   - After changing the core, run `tools\update-unity-plugin.ps1`.
 
@@ -362,7 +362,7 @@ the JavaScript client. `capture recover` with no root also scans the fallback ou
 
 ## Documentation
 
-This README is also the home page of the published docs at https://mindattic.github.io/MindAttic.Capture/
+This README is also the home page of the published docs at https://mindattic.github.io/MindAttic.Media.Capture/
 (built by `.github\workflows\docs.yml` through the shared DocFX pipeline).
 
 - [User stories](docs/USER_STORIES.md)
