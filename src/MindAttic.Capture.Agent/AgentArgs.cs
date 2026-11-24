@@ -8,6 +8,7 @@ namespace MindAttic.Capture.Agent;
 internal sealed class AgentArgs
 {
     private readonly Dictionary<string, string?> _options = new(StringComparer.OrdinalIgnoreCase);
+    private readonly Dictionary<string, List<string>> _repeated = new(StringComparer.OrdinalIgnoreCase);
 
     public string Command { get; private set; } = "help";
     public List<string> Positional { get; } = [];
@@ -16,6 +17,7 @@ internal sealed class AgentArgs
     private static readonly HashSet<string> Flags = new(StringComparer.OrdinalIgnoreCase)
     {
         "hq", "lossless", "gdi", "no-wgc", "separate-audio", "verbose", "no-hotkeys", "help", "self", "clipboard",
+        "json", "no-launch", "copy", "move", "full-page", "dark", "fake-media",
     };
 
     public static AgentArgs Parse(IReadOnlyList<string> args)
@@ -46,6 +48,11 @@ internal sealed class AgentArgs
                     value = args[++i];
                 }
                 result._options[name] = value;
+                if (value is not null)
+                {
+                    if (!result._repeated.TryGetValue(name, out var all)) result._repeated[name] = all = [];
+                    all.Add(value);
+                }
             }
             else
             {
@@ -58,6 +65,9 @@ internal sealed class AgentArgs
     public bool Has(string name) => _options.ContainsKey(name);
 
     public string? Get(string name) => _options.TryGetValue(name, out var v) ? v : null;
+
+    /// <summary>Every value an option was given, in order (--viewport 1440x900 --viewport 390x844).</summary>
+    public IReadOnlyList<string> GetAll(string name) => _repeated.TryGetValue(name, out var all) ? all : [];
 
     public string Require(string name) => Get(name) is { Length: > 0 } v ? v
         : throw new CaptureException(CaptureError.InvalidArgument, $"--{name} needs a value.");

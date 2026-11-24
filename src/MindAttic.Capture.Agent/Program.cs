@@ -2,6 +2,7 @@ using System.Diagnostics;
 using MindAttic.Capture;
 using MindAttic.Capture.Agent;
 using MindAttic.Capture.Hosting;
+using MindAttic.Capture.Sets;
 using MindAttic.Capture.Windows;
 using MindAttic.Capture.Windows.Native;
 using MindAttic.Capture.Windows.Screenshots;
@@ -39,6 +40,7 @@ namespace MindAttic.Capture.Agent
                     "replay" => await ReplayAsync(args, log),
                     "run" => await RunAsync(args, log),
                     "serve" => await ServeAsync(args, log),
+                    "set" => SetCommands.Run(args, log),
                     "raise" => await ApiClient.RaiseAsync(args),
                     "stop" => Signal(StopEventName, "stop"),
                     "save" => Signal(SaveEventName, "save"),
@@ -69,12 +71,17 @@ namespace MindAttic.Capture.Agent
                   capture raise  <event> [key=value ...]   send an event to a running `capture serve`
                   capture stop | save                      signal a running record/replay/run/serve
                   capture finalize <tapeDir>               export a stopped session tape
+                  capture set new --title T [--ticket ID] [--repo R] [--json]   make a preview set; prints its folder
+                  capture set add <dir> <file...> [--tag T] [--caption C] [--copy|--move]
+                  capture set list [--repo R] [--limit N] [--json]
+                  capture set show <dir> [--select FILE] [--no-launch]   prints pipe|launched|photos|none
                   capture recover [root]                   export sessions left behind by crashed apps
 
                 target:  --self | --monitor N | --region x,y,w,h | --window "title" | --hwnd 0x1234 | --process name
                          --self: the window hosting this CLI (the app embedding it, or the terminal when run solo)
                 common:  --out R:\MindAttic\Capture  --app Name  --config capture.json  --fps 60  --hq|--lossless
                          --audio app|mic  --gdi  --no-wgc  --ffmpeg path  --verbose
+                         --set <dir>: shot/record into a preview set as its next NNN_tag  [--caption C]
                 """);
             return 1;
         }
@@ -108,15 +115,19 @@ namespace MindAttic.Capture.Agent
         private static async Task<int> ShotAsync(AgentArgs args, ICaptureLog log)
         {
             var o = Options(args, log, "Desktop");
+            var staging = SetCommands.Stage(args, o);
             var target = args.Target();
             // The host remembers the frame it handed the engine, so --clipboard copies exactly the saved shot
             // rather than a second, later capture of the target.
             var host = new FrameRememberingHost(new DesktopCaptureHost(target, args.HostOptions()));
-            await using var engine = await CaptureEngine.StartNewAsync(host, o);
-            var result = await engine.ScreenshotAsync(args.Get("tag") ?? target.Label, new ScreenshotOptions { Format = args.ImageFormat() });
-            if (result.Succeeded && args.Has("clipboard") && host.LastStill is { } frame)
-                ClipboardWriter.SetImage(frame);
-            return Report(result);
+            CaptureResult result;
+            await using (var engine = await CaptureEngine.StartNewAsync(host, o))
+            {
+                result = await engine.ScreenshotAsync(args.Get("tag") ?? target.Label, new ScreenshotOptions { Format = args.ImageFormat() });
+                if (result.Succeeded && args.Has("clipboard") && host.LastStill is { } frame)
+                    ClipboardWriter.SetImage(frame);
+            }
+            return staging is null ? Report(result) : SetCommands.Finish(args, result, staging, ScreenSource(args, target), log);
         }
 
         /// <summary>Passes everything through to <paramref name="inner"/>, keeping the last still it captured.</summary>
@@ -140,16 +151,25 @@ namespace MindAttic.Capture.Agent
         private static async Task<int> RecordAsync(AgentArgs args, ICaptureLog log)
         {
             var o = Options(args, log, "Desktop");
-            await using var engine = await CaptureEngine.StartNewAsync(new DesktopCaptureHost(args.Target(), args.HostOptions()), o);
-            var tag = args.Get("tag") ?? args.Target().Label;
-            var recording = new RecordingOptions { Preset = args.Preset(), Outputs = args.Outputs(), SeparateAudioTracks = args.Has("separate-audio") };
-            await engine.StartRecordingAsync(tag, recording);
-            if (!engine.IsRecording) return (int)CaptureError.CaptureFailed;
-            var duration = args.GetDuration("duration");
-            Console.Error.WriteLine(duration is { } d ? $"Recording for {d.TotalSeconds:0.#}s..." : "Recording; press Enter, Ctrl+C or run `capture stop` to finish.");
-            await WaitForStopAsync(duration, null);
-            return Report(await engine.StopRecordingAsync());
+            var staging = SetCommands.Stage(args, o);
+            var target = args.Target();
+            CaptureResult result;
+            await using (var engine = await CaptureEngine.StartNewAsync(new DesktopCaptureHost(target, args.HostOptions()), o))
+            {
+                var tag = args.Get("tag") ?? target.Label;
+                var recording = new RecordingOptions { Preset = args.Preset(), Outputs = args.Outputs(), SeparateAudioTracks = args.Has("separate-audio") };
+                await engine.StartRecordingAsync(tag, recording);
+                if (!engine.IsRecording) return (int)CaptureError.CaptureFailed;
+                var duration = args.GetDuration("duration");
+                Console.Error.WriteLine(duration is { } d ? $"Recording for {d.TotalSeconds:0.#}s..." : "Recording; press Enter, Ctrl+C or run `capture stop` to finish.");
+                await WaitForStopAsync(duration, null);
+                result = await engine.StopRecordingAsync();
+            }
+            return staging is null ? Report(result) : SetCommands.Finish(args, result, staging, ScreenSource(args, target), log);
         }
+
+        private static PreviewSource ScreenSource(AgentArgs args, CaptureTarget target) =>
+            new() { Type = args.Has("window") || args.Has("hwnd") || args.Has("process") || args.Has("self") ? "window" : "screen", Target = target.Label };
 
         private static async Task<int> ReplayAsync(AgentArgs args, ICaptureLog log)
         {

@@ -36,6 +36,7 @@ Programmatic video capture and screenshots for MindAttic games and apps: trailer
 | `MindAttic.Capture.Windows` | net10.0-windows10.0.19041 | Desktop capture: Windows Graphics Capture for windows, Desktop Duplication / GDI for monitors and regions, WASAPI audio, global hotkeys, DI. |
 | `MindAttic.Capture.Wpf` | net10.0-windows10.0.19041 | `CaptureWpf.Init(this, e.Args)`: records the main window at native size, export on exit. |
 | `MindAttic.Capture.WebView2` | net10.0-windows10.0.19041 | `window.mindattic.capture` JavaScript bridge for any WebView2. |
+| `MindAttic.Capture.Sets` | net10.0 | Preview sets: `preview.json` model, store (create, list, import under a per-set lock), media kinds, MediaViewer handoff. |
 | `capture.exe` (agent) | net10.0-windows10.0.19041 | CLI and localhost API: record any app with no code changes, serve browser pages and scripts, finalize and recover sessions. |
 | `com.mindattic.capture` (Unity) | Unity 6, Windows | Game-view capture via GPU readback, game audio, Play Mode menu; reads `-capture` from the player command line. |
 
@@ -247,29 +248,49 @@ Placed beside the exe (picked up automatically), or passed with `-capture-config
 - **WebSocket:** `/ws` accepts the same operations as `{op, ...}` messages.
 - **Commands:** the API can never run commands; `postCapture` only comes from config files.
 
+## Preview sets (`capture set`)
+
+A preview set is one folder of numbered media plus `preview.json` (schema `mindattic.preview/1`) that an agent
+fills and MindAttic.MediaViewer shows; see [docs/design/preview-sets.md](docs/design/preview-sets.md). Sets live
+in `R:\MindAttic\Preview\{Repo}\{yyyy-MM-ddTHH.mm.ss}_{TICKET}_{slug}\` (`%USERPROFILE%\Pictures\MindAttic\Preview`
+when `R:` is missing) and hold `NNN_{tag}.{ext}` files with their sidecars.
+
+```powershell
+$set = capture set new --title "exam caption" --ticket GAD-T725      # prints the set folder
+capture shot --window "Gadfly" --set $set --tag desktop --caption "Desktop 1440x900"
+capture record --monitor 0 --duration 10s --set $set --tag walkthrough
+capture set add $set C:\temp\q1.wav --caption "Examiner voice, Q1"  # --move to move instead of copy
+capture set list --repo Gadfly --limit 5
+capture set show $set                                                # pipe | launched | photos | none
+```
+
+`--set` makes shot and record write to a staging folder inside the set and then import the files as the set's next
+number, sidecars included. `capture set show` hands the set to a running MediaViewer, else starts it
+(`C:\Apps\MindAttic.MediaViewer\MindAttic.MediaViewer.exe`), else opens the first image with Photos, and prints
+which; `--no-launch` only lists the items. The library behind it, `MindAttic.Capture.Sets`, is packed to
+`C:\LocalNuGet`.
 ## Output
 
-Everything goes to `R:\MindAttic\Capture\{RepoName}\`. Each file name starts with the project name, so a file
-copied elsewhere still says what it shows, followed by ISO 8601 local time with `:` replaced by `.`
-(Windows file names cannot contain `:`):
+Everything goes to `R:\MindAttic\Capture\{RepoName}\`, one folder per app run. The session's timestamp is UTC,
+ISO 8601 with `:` replaced by `.` (Windows file names cannot contain `:`), and every file inside starts with the
+same `{timestamp}_{RepoName}`, so a file copied elsewhere still says what it shows:
 
 ```
 R:\MindAttic\Capture\UnitySolarSystem\
-  UnitySolarSystem_2026-10-11T14.38.02.625.session.json   session manifest: app, version, events, markers, captures, diagnostics
-  UnitySolarSystem_2026-10-11T14.38.02.625.mkv / .mp4 / .thumb.jpg / .mkv.json   the -capture video session (named by its start)
-  UnitySolarSystem_2026-10-11T14.38.03.577.png / .png.json   a screenshot and its sidecar
-  UnitySolarSystem_2026-10-11T14.39.12.004.mkv / .mp4        a replay, clip or recording
+  2026.10.11T14.38.02Z_UnitySolarSystem\                        one app run (session)
+    2026.10.11T14.38.02Z_UnitySolarSystem.session.json           manifest: app, version, events, markers, captures, diagnostics
+    2026.10.11T14.38.02Z_UnitySolarSystem.log / .stats.csv       the session's log and encoder stats
+    2026.10.11T14.38.02Z_UnitySolarSystem_Video.mkv / .mp4 / .thumb.jpg / .mkv.json   the -capture video session
+    2026.10.11T14.38.02Z_UnitySolarSystem_Screenshot_000.png / .png.json              a screenshot and its sidecar
+    2026.10.11T14.38.02Z_UnitySolarSystem_Replay_001.mkv / .mp4                       a replay, clip or recording
 ```
-
-`tools\prefix-existing-captures.ps1` renames captures made before the prefix (and fixes the names inside their
-manifests). It only renames, skips files still in use, and is safe to re-run.
 
 `{RepoName}` is the git repository the app runs from (an app in `bin\Debug`, a Unity project, a local site
 folder), so projects that share a product name (GridGame, GridGame2025, GridGame2026) still get separate
 folders. Unity players carry it from the build. Outside a repo it falls back to the app name. If `R:` is
-missing, output goes to `%USERPROFILE%\Videos\MindAttic\Capture` with a warning. `fileTemplate` can
-change the names (tokens `{timestamp} {date} {time} {session} {tag} {index} {kind} {app}`).
-
+missing, output goes to `%USERPROFILE%\Videos\MindAttic\Capture` with a warning. `fileTemplate` changes the
+file names (default `{session}_{app}_{kind}_{index}`; tokens `{timestamp} {date} {time} {session} {tag} {index}
+{kind} {app}`). `tools\prefix-existing-captures.ps1` renamed captures made under the older flat layout.
 Each sidecar records:
 - kind, the tag (e.g. the tour stop or event name), app, build version and session
 - host, timestamp and the trigger that fired
