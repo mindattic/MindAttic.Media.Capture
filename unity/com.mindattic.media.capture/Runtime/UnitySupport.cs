@@ -52,10 +52,11 @@ namespace MindAttic.Media.Capture.Unity
         }
     }
 
-    /// <summary>Finds capture.exe (installed by MindAttic.Capture/tools/install.ps1) so exports run after the game exits.</summary>
+    /// <summary>Finds capture.exe (installed by MindAttic.Media.Capture's tools/install.ps1) so exports run after the game exits.</summary>
     internal static class UnityAgentLocator
     {
-        private const string ProductName = "MindAttic.Capture.Agent";
+        private const string ProductName = "MindAttic.Media.Capture.Agent";
+        private const string LegacyProductName = "MindAttic.Capture.Agent";
 
         public static string Find()
         {
@@ -78,7 +79,9 @@ namespace MindAttic.Media.Capture.Unity
         {
             try
             {
-                return !string.IsNullOrEmpty(path) && File.Exists(path) && FileVersionInfo.GetVersionInfo(path).ProductName == ProductName;
+                if (string.IsNullOrEmpty(path) || !File.Exists(path)) return false;
+                var product = FileVersionInfo.GetVersionInfo(path).ProductName;
+                return product == ProductName || product == LegacyProductName;
             }
             catch (Exception)
             {

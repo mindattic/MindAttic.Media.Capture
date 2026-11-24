@@ -1,6 +1,6 @@
 /*
- * MindAttic.Capture — one JavaScript API for pages inside a WebView2 host (MindAttic Browser, Automata, any
- * app using MindAttic.Capture.WebView2) and for plain browser pages talking to `capture serve` on localhost.
+ * MindAttic.Media.Capture — one JavaScript API for pages inside a WebView2 host (MindAttic Browser, Automata, any
+ * app using MindAttic.Media.Capture.WebView2) and for plain browser pages talking to `capture serve` on localhost.
  *
  *   mindattic.capture.raise('critical-hit', { damage: 912 });   // trigger rules from capture.json
  *   mindattic.capture.marker('boss-phase-2');

@@ -64,7 +64,10 @@ public sealed class WindowsCaptureSession(CaptureEngine engine, GlobalHotkeys? h
 public static class AgentLocator
 {
     /// <summary>Product name stamped on the agent exe; anything else called capture.exe is ignored.</summary>
-    public const string ProductName = "MindAttic.Capture.Agent";
+    public const string ProductName = "MindAttic.Media.Capture.Agent";
+
+    /// <summary>The agent's product name before the MindAttic.Media.Capture rename; an older capture.exe still counts.</summary>
+    public const string LegacyProductName = "MindAttic.Capture.Agent";
 
     /// <summary>Where tools/install.ps1 puts the agent.</summary>
     public static readonly string InstallDir = Path.Combine(
@@ -86,7 +89,7 @@ public static class AgentLocator
     {
         try
         {
-            return File.Exists(path) && FileVersionInfo.GetVersionInfo(path).ProductName == ProductName;
+            return File.Exists(path) && FileVersionInfo.GetVersionInfo(path).ProductName is ProductName or LegacyProductName;
         }
         catch (Exception ex) when (ex is IOException or ArgumentException or UnauthorizedAccessException)
         {
