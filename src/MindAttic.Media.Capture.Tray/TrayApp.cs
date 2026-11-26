@@ -111,13 +111,15 @@ internal sealed class TrayApp : ApplicationContext
         // SaveRegion would persist the loss, so keep the last good settings until the file reads cleanly. A missing
         // or empty file (TryLoad's success-with-defaults cases) is skipped the same way.
         if (!HasSavedSettings(_store.FilePath) || !_store.TryLoad(out var next)) return;
-        if (next.RecordHotkey != _settings.RecordHotkey || next.ScreenshotHotkey != _settings.ScreenshotHotkey)
+        if (next.RecordHotkey != _settings.RecordHotkey || next.ScreenshotHotkey != _settings.ScreenshotHotkey
+            || next.FocusedRecordHotkey != _settings.FocusedRecordHotkey)
         {
-            var (oldRecord, oldShot) = (_settings.RecordHotkey, _settings.ScreenshotHotkey);
-            (_settings.RecordHotkey, _settings.ScreenshotHotkey) = (next.RecordHotkey, next.ScreenshotHotkey);
+            var (oldRecord, oldShot, oldFocused) = (_settings.RecordHotkey, _settings.ScreenshotHotkey, _settings.FocusedRecordHotkey);
+            (_settings.RecordHotkey, _settings.ScreenshotHotkey, _settings.FocusedRecordHotkey) =
+                (next.RecordHotkey, next.ScreenshotHotkey, next.FocusedRecordHotkey);
             if (TryRegisterHotkeys() is { } problem)
             {
-                (_settings.RecordHotkey, _settings.ScreenshotHotkey) = (oldRecord, oldShot);
+                (_settings.RecordHotkey, _settings.ScreenshotHotkey, _settings.FocusedRecordHotkey) = (oldRecord, oldShot, oldFocused);
                 TryRegisterHotkeys();
                 ShowError("Hotkey not available", problem + Environment.NewLine + "Keeping the previous hotkeys.");
             }
@@ -153,7 +155,31 @@ internal sealed class TrayApp : ApplicationContext
             return;
         }
         if (_recorder.State == RecorderState.Recording) _ = StopAsync();
-        else if (_recorder.State == RecorderState.Idle) _ = RecordAsync(_armed);
+        // The focused-window hotkey resolves its target at press time, so one key records whatever app is in front.
+        // It doesn't re-arm the Record hotkey, which keeps the screen, app or area chosen in the menu.
+        else if (_recorder.State == RecorderState.Idle)
+            _ = hotkey == TrayHotkey.RecordFocused ? RecordAsync(FocusedTarget(), arm: false) : RecordAsync(_armed);
+    }
+
+    /// <summary>What the focused-window hotkey records.</summary>
+    internal const VideoFormat FocusedVideo = VideoFormat.Lossless;
+
+    /// <summary>
+    /// The window in front right now, as a window target (capture.exe's <c>--hwnd</c>: followed with Windows Graphics
+    /// Capture at its own size). With only the desktop or taskbar focused, the screen under the mouse.
+    /// </summary>
+    private ArmedTarget FocusedTarget()
+    {
+        if (AppWindowList.Focused() is { } w)
+        {
+            var app = w.ProcessName.Length > 0 ? w.ProcessName : "App";
+            return new(CaptureTarget.Window(w.Hwnd), app, w.Title.Length > 0 ? w.Title : app, FocusedVideo, _settings.DefaultImage);
+        }
+        var cursor = Cursor.Position;
+        var monitors = Desktop.GetMonitors();
+        var under = monitors.FirstOrDefault(m => m.Bounds.Contains(new PixelRect(cursor.X, cursor.Y, 1, 1)))
+                    ?? monitors.FirstOrDefault(m => m.IsPrimary);
+        return ScreenTarget(under?.Index ?? 0) with { Video = FocusedVideo };
     }
 
     private void OnIconClick(object? sender, MouseEventArgs e)
@@ -324,10 +350,10 @@ internal sealed class TrayApp : ApplicationContext
         UpdateIcon();
     }
 
-    private async Task RecordAsync(ArmedTarget target)
+    private async Task RecordAsync(ArmedTarget target, bool arm = true)
     {
         if (_recorder.State != RecorderState.Idle) return;
-        _armed = target;
+        if (arm) _armed = target;
         try
         {
             await _recorder.StartAsync(target.Target, target.App, target.Label, TrayFormats.Recording(target.Video));

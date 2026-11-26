@@ -64,7 +64,7 @@ Run `run.ps1` from the repo root. It installs the agent (`capture.exe`) and tray
 - Record Screen and Screenshot per monitor; Record App and Screenshot App pick any open window and capture it at its own size, filed under the app's name.
 - Record Area and Screenshot Area dim every monitor and let you drag a rectangle: grips move and resize it, arrow keys nudge it (Shift for 10 px), aspect-ratio buttons snap it (16:9, 9:16, 1:1, and more), Enter confirms, Esc cancels. A red frame marks the area while it records.
 - The selector toolbar chooses video files (lossless + MP4, lossless only, MP4 only, GIF) and image format (PNG, JPG). Areas can be saved as named regions, starting with a 9:16 "YouTube Short".
-- Hotkeys: `Ctrl+Alt+Shift+R` starts and stops recording whatever is armed, `Ctrl+Alt+Shift+S` takes a screenshot. Both are rebindable in Settings.
+- Hotkeys: `Ctrl+Alt+Shift+R` starts and stops recording whatever is armed, `Ctrl+Alt+Shift+S` takes a screenshot. `Ctrl+Alt+Shift+F` records whichever window has focus when you press it (Unity, Unreal, a WPF app, a browser...), lossless at the window's own size, and stops on the next press; with only the desktop focused it records the screen under the mouse. Nothing records until a hotkey is pressed. All three are rebindable in Settings.
 - Finished captures are listed with their sizes in a notification; Open Last Capture and Show Last Capture in Folder are in the menu. Exit waits for a recording that is starting or saving.
 - Settings (capture folder, default formats, start with Windows, hotkeys) and saved regions live in `%LOCALAPPDATA%\MindAttic\Capture\tray.json`.
 

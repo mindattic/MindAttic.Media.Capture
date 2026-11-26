@@ -3,7 +3,11 @@ using MindAttic.Media.Capture.Windows;
 
 namespace MindAttic.Media.Capture.Tray;
 
-internal enum TrayHotkey { Record = 1, Screenshot = 2 }
+/// <summary>
+/// Record toggles the armed target (Screen 1 until something else is recorded or armed); RecordFocused toggles a
+/// lossless recording of whichever window has focus when it is pressed; Screenshot shoots the armed target.
+/// </summary>
+internal enum TrayHotkey { Record = 1, Screenshot = 2, RecordFocused = 3 }
 
 /// <summary>System-wide hotkeys delivered on the UI thread through a hidden message window.</summary>
 internal sealed class HotkeyWindow : NativeWindow, IDisposable

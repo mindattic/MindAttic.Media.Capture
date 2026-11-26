@@ -78,8 +78,16 @@ internal sealed class TraySettings
         Help = "Ctrl, Alt and/or Shift plus a key, e.g. Ctrl+Alt+Shift+R. Empty turns the hotkey off.")]
     public string RecordHotkey { get; set; } = "Ctrl+Alt+Shift+R";
 
+    /// <summary>
+    /// One hotkey for every app: starts a lossless (FFV1) recording of whichever window has focus when pressed
+    /// (Unity, Unreal, a WPF app...), at that window's own resolution; pressing it again stops. Nothing records until it is pressed.
+    /// </summary>
+    [Setting("Start / stop recording the focused window", Group = "Hotkeys", Order = 2,
+        Help = "Records whichever app has focus, lossless at its own size; press again to stop. Empty turns it off.")]
+    public string FocusedRecordHotkey { get; set; } = "Ctrl+Alt+Shift+F";
+
     /// <summary>Takes a screenshot of the armed target.</summary>
-    [Setting("Screenshot", Group = "Hotkeys", Order = 2, Help = "Takes a screenshot of the armed target, e.g. Ctrl+Alt+Shift+S.")]
+    [Setting("Screenshot", Group = "Hotkeys", Order = 3, Help = "Takes a screenshot of the armed target, e.g. Ctrl+Alt+Shift+S.")]
     public string ScreenshotHotkey { get; set; } = "Ctrl+Alt+Shift+S";
 
     /// <summary>Where captures go; empty uses capture.json's outputRoot or the engine default (R:\MindAttic\Media\Capture).</summary>
@@ -163,5 +171,5 @@ internal sealed class TraySettings
 
     /// <summary>The hotkeys the tray registers, by action.</summary>
     public IReadOnlyList<(TrayHotkey Action, string Keys)> Hotkeys() =>
-        [(TrayHotkey.Record, RecordHotkey), (TrayHotkey.Screenshot, ScreenshotHotkey)];
+        [(TrayHotkey.Record, RecordHotkey), (TrayHotkey.Screenshot, ScreenshotHotkey), (TrayHotkey.RecordFocused, FocusedRecordHotkey)];
 }
