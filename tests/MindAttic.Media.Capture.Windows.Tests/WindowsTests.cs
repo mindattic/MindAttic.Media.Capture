@@ -221,10 +221,27 @@ public class DesktopIntegrationTests
     private string _root = "";
 
     [OneTimeSetUp]
-    public void Require()
+    public async Task Require()
     {
         if (!Environment.UserInteractive || Desktop.GetMonitors().Count == 0) Assert.Ignore("Needs an interactive desktop.");
         if (FfmpegLocator.TryFind("ffmpeg") is null) Assert.Ignore("Needs ffmpeg.");
+        // A locked workstation or secure desktop still reports monitors but refuses every screen copy, so probe one.
+        var probeRoot = Directory.CreateTempSubdirectory("capture-win-probe-").FullName;
+        try
+        {
+            await using var engine = await CaptureEngine.StartNewAsync(new DesktopCaptureHost(CaptureTarget.Region(0, 0, 16, 16)), new CaptureOptions { OutputRoot = probeRoot, AppName = "WinTest", Fps = 30 });
+            var r = await engine.ScreenshotAsync("probe");
+            if (!r.Succeeded) Assert.Ignore("Needs an unlocked desktop that allows screen capture: " + r.Error);
+        }
+        catch (CaptureException ex)
+        {
+            Assert.Ignore("Needs an unlocked desktop that allows screen capture: " + ex.Message);
+        }
+        finally
+        {
+            try { Directory.Delete(probeRoot, true); }
+            catch (IOException) { }
+        }
     }
 
     [SetUp]
