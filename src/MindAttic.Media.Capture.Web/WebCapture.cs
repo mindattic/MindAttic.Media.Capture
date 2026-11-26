@@ -78,6 +78,7 @@ public static class WebCapture
             }
             var page = await context.NewPageAsync().ConfigureAwait(false);
             var started = DateTimeOffset.Now;
+            var captured = false;
             try
             {
                 await page.GotoAsync(o.Url, new() { WaitUntil = WaitUntilState.Load, Timeout = (float)o.Timeout.TotalMilliseconds }).ConfigureAwait(false);
@@ -103,6 +104,7 @@ public static class WebCapture
                     var remaining = length - (DateTimeOffset.Now - started);
                     if (remaining > TimeSpan.Zero) await Task.Delay(remaining, ct).ConfigureAwait(false);
                 }
+                captured = true;
             }
             catch (PlaywrightException ex)
             {
@@ -111,6 +113,7 @@ public static class WebCapture
             finally
             {
                 await context.CloseAsync().ConfigureAwait(false); // finishes the video file
+                if (!captured && videoDir is not null) TryDelete(videoDir); // a failed capture leaves no recording behind
             }
 
             if (videoDir is not null && page.Video is { } video)
