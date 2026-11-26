@@ -298,11 +298,16 @@ internal static class FfmpegArgs
         return [.. Common, "-f", "concat", "-safe", "0", "-i", concatList, "-vf", vf, "-fps_mode", "passthrough", "-y", outputPattern];
     }
 
-    /// <summary>Timelapse pass 2: the PNG sequence at <paramref name="fps"/>, last frame held, through a generated palette.</summary>
+    /// <summary>
+    /// Timelapse pass 2: the PNG sequence at <paramref name="fps"/>, last frame held, through a generated palette.
+    /// The palette counts every pixel of every frame (stats_mode=full): stats_mode=diff only counts what changed
+    /// between frames, so the held frames and the changing time stamp outweighed a whole new frame and its colour
+    /// was left out of the palette (a solid blue frame came out dark red).
+    /// </summary>
     public static List<string> GifFromFrames(string inputPattern, int fps, double holdSeconds, string output) =>
     [
         .. Common, "-framerate", I(fps), "-i", inputPattern,
-        "-filter_complex", $"tpad=stop_mode=clone:stop_duration={S(holdSeconds)},split[a][b];[a]palettegen=stats_mode=diff[p];[b][p]paletteuse=dither=sierra2_4a",
+        "-filter_complex", $"tpad=stop_mode=clone:stop_duration={S(holdSeconds)},split[a][b];[a]palettegen=stats_mode=full[p];[b][p]paletteuse=dither=sierra2_4a",
         "-loop", "0", "-y", output,
     ];
 
