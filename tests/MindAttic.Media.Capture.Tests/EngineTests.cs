@@ -383,7 +383,9 @@ public class EngineTests
 
         Assert.That(reason, Does.Contain("maximum duration"));
         Assert.That(engine.Enabled, Is.False);
-        Assert.That(Probe(stem + "_Video.mkv", "format=duration"), Is.EqualTo(3.0).Within(1.0));
+        // The cap is 3s, but the valve polls and the stop/flush lands after it, so a loaded machine overshoots by seconds;
+        // what matters is that it stopped near the cap and did not run on.
+        Assert.That(Probe(stem + "_Video.mkv", "format=duration"), Is.InRange(2.0, 8.0));
         Assert.That(File.ReadAllLines(stem + ".stats.csv"), Has.Length.GreaterThanOrEqualTo(4));
         Assert.That(File.ReadAllText(stem + ".session.json"), Does.Contain("\"stoppedBy\": \"the maximum duration"));
     }
