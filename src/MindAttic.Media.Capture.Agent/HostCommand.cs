@@ -80,12 +80,23 @@ internal sealed class HostCommand(TextWriter output)
             if (args.GetInt("pid") is { } pid) WatchProcess(pid, stop);
             _ = Task.Run(async () =>
             {
-                while (await input.ReadLineAsync() is { } line)
+                try
                 {
-                    if (line.Length == 0) continue;
-                    if (!await HandleAsync(engine, line)) break;
+                    while (await input.ReadLineAsync() is { } line)
+                    {
+                        if (line.Length == 0) continue;
+                        if (!await HandleAsync(engine, line)) break;
+                    }
                 }
-                stop.TrySetResult();
+                catch (Exception ex)
+                {
+                    // A fault here must still end the session: otherwise nothing sets stop and the host never exports.
+                    log.Log(CaptureLogLevel.Error, "The request loop failed; stopping.", ex);
+                }
+                finally
+                {
+                    stop.TrySetResult();
+                }
             });
             await stop.Task;
             log.Log(CaptureLogLevel.Info, "Game gone or asked to stop; exporting the session.");
