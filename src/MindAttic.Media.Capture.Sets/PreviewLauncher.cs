@@ -70,8 +70,8 @@ public static class PreviewHandoff
 /// </summary>
 public static class PreviewLauncher
 {
-    /// <summary>Where run.ps1 deploys the Viewer.</summary>
-    public const string DefaultViewerPath = @"C:\Apps\MindAttic.Media.Viewer\MindAttic.Media.Viewer.exe";
+    /// <summary>Where run.ps1 deploys the Viewer's Release build.</summary>
+    public const string DefaultViewerPath = @"R:\MindAttic\Apps\MindAttic.Media.Viewer\Release\MindAttic.Media.Viewer.exe";
 
     /// <summary>The Viewer exe: <c>MINDATTIC_MEDIA_VIEWER</c> when set, else <see cref="DefaultViewerPath"/>.</summary>
     public static string ViewerPath =>
