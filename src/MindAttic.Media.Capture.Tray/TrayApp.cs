@@ -212,8 +212,11 @@ internal sealed class TrayApp : ApplicationContext
             _ = hotkey == TrayHotkey.RecordFocused ? RecordAsync(FocusedTarget(), arm: false) : RecordAsync(_armed);
     }
 
-    /// <summary>What the focused-window hotkey records.</summary>
-    internal const VideoFormat FocusedVideo = VideoFormat.Lossless;
+    /// <summary>
+    /// What the focused-window hotkey records: the lossless FFV1 master first, then on stop an H.264 MP4 rendered
+    /// from that finished master beside it (the Exporter's MP4 pass reads the .mkv; nothing is encoded twice live).
+    /// </summary>
+    internal const VideoFormat FocusedVideo = VideoFormat.LosslessAndMp4;
 
     /// <summary>
     /// The window in front right now, as a window target (capture.exe's <c>--hwnd</c>: followed with Windows Graphics
