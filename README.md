@@ -158,7 +158,7 @@ surprise; in the editor use **MindAttic ▸ Capture** to record Play Mode. Game 
 with `CaptureUnity.Raise("battle-complete")`; to bring in rules, pass `-capture-config path.json`
 explicitly.
 
-**Websites:** `C:\Apps\MindAttic.Browser\MindAttic.Browser.exe <url | site folder> -capture video`. Capture
+**Websites:** `R:\MindAttic\Apps\MindAttic.Browser\Release\MindAttic.Browser.exe <url | site folder> -capture video`. Capture
 always uses this deployed copy of [MindAttic.Browser](https://github.com/mindattic/MindAttic.Browser) (`capture run --url`
 included); deploy or refresh it with that repo's `run.ps1`. A folder is served at
 `https://<folder>.local/`, and its captures are named after the folder (`mindattic.com\mindattic.com_<timestamp>.mkv`)

@@ -99,20 +99,20 @@ public static class AgentLocator
 }
 
 /// <summary>
-/// The MindAttic Browser that capture drives: always the deployed copy in C:\Apps (published by
+/// The MindAttic Browser that capture drives: always the Release deploy in R:\MindAttic\Apps (published by
 /// MindAttic.Browser's run.ps1), never a dev build or an older install elsewhere.
 /// </summary>
 public static class BrowserLocator
 {
     /// <summary>The deployed browser.</summary>
-    public const string DeployedPath = @"C:\Apps\MindAttic.Browser\MindAttic.Browser.exe";
+    public const string DeployedPath = @"R:\MindAttic\Apps\MindAttic.Browser\Release\MindAttic.Browser.exe";
 
     /// <summary>The deployed browser, or a <see cref="CaptureException"/> saying how to deploy it.</summary>
     public static string Require(string path = DeployedPath) =>
         File.Exists(path)
             ? path
             : throw new CaptureException(CaptureError.TargetNotFound,
-                $"MindAttic Browser is not deployed at {path}. Deploy it with MindAttic.Browser\\run.ps1 (or open C:\\Apps\\MindAttic.Browser\\run.bat).");
+                $"MindAttic Browser is not deployed at {path}. Deploy it with MindAttic.Browser\\run.ps1 -Redeploy (or run.bat, then 1) Redeploy).");
 }
 
 /// <summary>Bridges capture logging to Microsoft.Extensions.Logging.</summary>

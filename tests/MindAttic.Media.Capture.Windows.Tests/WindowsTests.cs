@@ -16,8 +16,8 @@ namespace MindAttic.Media.Capture.Windows.Tests;
 public class BrowserLocatorTests
 {
     [Test]
-    public void Capture_always_drives_the_browser_deployed_in_C_Apps() =>
-        Assert.That(BrowserLocator.DeployedPath, Is.EqualTo(@"C:\Apps\MindAttic.Browser\MindAttic.Browser.exe"));
+    public void Capture_always_drives_the_browser_Release_deploy() =>
+        Assert.That(BrowserLocator.DeployedPath, Is.EqualTo(@"R:\MindAttic\Apps\MindAttic.Browser\Release\MindAttic.Browser.exe"));
 
     [Test]
     public void A_missing_deployment_fails_loudly_with_how_to_deploy()

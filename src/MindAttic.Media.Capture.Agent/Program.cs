@@ -72,7 +72,7 @@ namespace MindAttic.Media.Capture.Agent
                   capture shot   <target> [--format png|jpg|webp|bmp|raw] [--tag T] [--clipboard]
                   capture record <target> [--duration 30s] [--preset trailer|lossless|devlog|bugreport] [--outputs mp4,gif]
                   capture replay <target> [--length 30s]   keep a rolling buffer; Enter or `capture save` saves it
-                  capture run    [--url URL|folder | -- app.exe args]   record an app (--url: in C:\Apps\MindAttic.Browser) until it exits
+                  capture run    [--url URL|folder | -- app.exe args]   record an app (--url: in R:\MindAttic\Apps\MindAttic.Browser\Release) until it exits
                   capture serve  <target> [--port 47800] [--allow-origin URL]   localhost API for browsers and scripts
                   capture raise  <event> [key=value ...]   send an event to a running `capture serve`
                   capture stop | save                      signal a running record/replay/run/serve
@@ -219,7 +219,7 @@ namespace MindAttic.Media.Capture.Agent
 
         /// <summary>
         /// Opens <paramref name="url"/> (a URL or a local site folder) in the deployed MindAttic Browser
-        /// (C:\Apps\MindAttic.Browser), which this agent then records. Its process lives exactly as long as its window.
+        /// (R:\MindAttic\Apps\MindAttic.Browser\Release), which this agent then records. Its process lives exactly as long as its window.
         /// </summary>
         private static (Process Process, string AppName, string? ProfileDir) LaunchBrowserApp(string url)
         {
