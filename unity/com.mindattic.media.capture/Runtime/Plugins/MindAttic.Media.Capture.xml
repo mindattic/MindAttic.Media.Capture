@@ -143,6 +143,12 @@
         <member name="P:MindAttic.Media.Capture.CaptureOptions.Enabled">
             <summary>Global kill switch. When false every API call logs a warning and does nothing.</summary>
         </member>
+        <member name="F:MindAttic.Media.Capture.CaptureOptions.DefaultOutputRoot">
+            <summary>The engine's default <see cref="P:MindAttic.Media.Capture.CaptureOptions.OutputRoot"/>.</summary>
+        </member>
+        <member name="F:MindAttic.Media.Capture.CaptureOptions.LegacyOutputRoot">
+            <summary>The output root before captures moved under R:\MindAttic\Media.</summary>
+        </member>
         <member name="P:MindAttic.Media.Capture.CaptureOptions.OutputRoot">
             <summary>Where captures go. A missing drive falls back to <see cref="P:MindAttic.Media.Capture.CaptureOptions.FallbackRoot"/> with a warning.</summary>
         </member>
@@ -733,7 +739,12 @@
             </summary>
         </member>
         <member name="M:MindAttic.Media.Capture.Ffmpeg.FfmpegArgs.GifFromFrames(System.String,System.Int32,System.Double,System.String)">
-            <summary>Timelapse pass 2: the PNG sequence at <paramref name="fps"/>, last frame held, through a generated palette.</summary>
+            <summary>
+            Timelapse pass 2: the PNG sequence at <paramref name="fps"/>, last frame held, through a generated palette.
+            The palette counts every pixel of every frame (stats_mode=full): stats_mode=diff only counts what changed
+            between frames, so the held frames and the changing time stamp outweighed a whole new frame and its colour
+            was left out of the palette (a solid blue frame came out dark red).
+            </summary>
         </member>
         <member name="M:MindAttic.Media.Capture.Ffmpeg.FfmpegArgs.FilterPath(System.String)">
             <summary>A file path as a quoted filter option value (forward slashes, escaped colons).</summary>
@@ -1442,6 +1453,66 @@
         </member>
         <member name="M:MindAttic.Media.Capture.Output.PostCaptureRunner.Expand(System.String,MindAttic.Media.Capture.CaptureResult,System.String)">
             <summary>Fills the placeholders. An unquoted {path} is quoted, since output folders can contain spaces.</summary>
+        </member>
+        <member name="T:MindAttic.Media.Capture.Output.RootMove">
+            <summary>One item <see cref="T:MindAttic.Media.Capture.Output.RootMigration"/> moved, or left in place and why.</summary>
+            <param name="From">Where it is.</param>
+            <param name="To">Where it goes.</param>
+            <param name="Reason">Null for a move; why it stayed for a skip.</param>
+        </member>
+        <member name="M:MindAttic.Media.Capture.Output.RootMove.#ctor(System.String,System.String,System.String)">
+            <summary>One item <see cref="T:MindAttic.Media.Capture.Output.RootMigration"/> moved, or left in place and why.</summary>
+            <param name="From">Where it is.</param>
+            <param name="To">Where it goes.</param>
+            <param name="Reason">Null for a move; why it stayed for a skip.</param>
+        </member>
+        <member name="P:MindAttic.Media.Capture.Output.RootMove.From">
+            <summary>Where it is.</summary>
+        </member>
+        <member name="P:MindAttic.Media.Capture.Output.RootMove.To">
+            <summary>Where it goes.</summary>
+        </member>
+        <member name="P:MindAttic.Media.Capture.Output.RootMove.Reason">
+            <summary>Null for a move; why it stayed for a skip.</summary>
+        </member>
+        <member name="T:MindAttic.Media.Capture.Output.RootMigrationReport">
+            <summary>What one <see cref="M:MindAttic.Media.Capture.Output.RootMigration.Run(System.String,System.String,System.Boolean,System.Func{System.DateTimeOffset})"/> did (or, as a dry run, would do).</summary>
+        </member>
+        <member name="P:MindAttic.Media.Capture.Output.RootMigrationReport.From">
+            <summary>The old root.</summary>
+        </member>
+        <member name="P:MindAttic.Media.Capture.Output.RootMigrationReport.To">
+            <summary>The new root.</summary>
+        </member>
+        <member name="P:MindAttic.Media.Capture.Output.RootMigrationReport.Applied">
+            <summary>False for a dry run: nothing on disk changed.</summary>
+        </member>
+        <member name="P:MindAttic.Media.Capture.Output.RootMigrationReport.Moved">
+            <summary>Items moved (or that would be).</summary>
+        </member>
+        <member name="P:MindAttic.Media.Capture.Output.RootMigrationReport.Skipped">
+            <summary>Items left in the old root: their target exists, or they were locked.</summary>
+        </member>
+        <member name="P:MindAttic.Media.Capture.Output.RootMigrationReport.Warnings">
+            <summary>Moved JSON files whose old-root paths could not be rewritten.</summary>
+        </member>
+        <member name="P:MindAttic.Media.Capture.Output.RootMigrationReport.Marker">
+            <summary>The marker written in the old root; null on a dry run or when the old root is missing.</summary>
+        </member>
+        <member name="T:MindAttic.Media.Capture.Output.RootMigration">
+            <summary>
+            Moves an old root's folders (one per app or repo) into a new root on the same volume. A folder whose target is
+            missing is renamed across whole; one whose target exists is merged a level down, child by child, and any child
+            whose target exists stays put. Nothing is deleted or overwritten. Absolute old-root paths inside moved JSON files
+            (capture sidecars, session manifests, tape.json) are rewritten to the new root; preview.json holds only file names.
+            </summary>
+        </member>
+        <member name="F:MindAttic.Media.Capture.Output.RootMigration.MarkerName">
+            <summary>The marker left in the old root; never moved.</summary>
+        </member>
+        <member name="M:MindAttic.Media.Capture.Output.RootMigration.Run(System.String,System.String,System.Boolean,System.Func{System.DateTimeOffset})">
+            <summary>Plans the move of <paramref name="from"/>'s children into <paramref name="to"/>; with
+            <paramref name="apply"/>, makes it and writes the marker.</summary>
         </member>
         <member name="T:MindAttic.Media.Capture.ValveSample">
             <summary>One poll of the resources the valve watches. Null means "unknown on this platform".</summary>

@@ -32,12 +32,12 @@ Programmatic video capture and screenshots for MindAttic games and apps: trailer
 
 | Package (1.0.0 unless noted) | Target | What it does |
 |---|---|---|
-| `MindAttic.Media.Capture` | netstandard2.1; net10.0 | Core: API, `-capture` parsing, trigger rules, rolling tape, exports, sidecars, session manifest. No third-party dependencies (Unity consumes the netstandard2.1 build). |
-| `MindAttic.Media.Capture.Windows` | net10.0-windows10.0.19041 | Desktop capture: Windows Graphics Capture for windows, Desktop Duplication / GDI for monitors and regions, WASAPI audio, global hotkeys, DI. |
+| `MindAttic.Media.Capture` 1.1.0 | netstandard2.1; net10.0 | Core: API, `-capture` parsing, trigger rules, rolling tape, exports, sidecars, session manifest. No third-party dependencies (Unity consumes the netstandard2.1 build). |
+| `MindAttic.Media.Capture.Windows` 1.1.0 | net10.0-windows10.0.19041 | Desktop capture: Windows Graphics Capture for windows, Desktop Duplication / GDI for monitors and regions, WASAPI audio, global hotkeys, DI. |
 | `MindAttic.Media.Capture.Wpf` | net10.0-windows10.0.19041 | `CaptureWpf.Init(this, e.Args)`: records the main window at native size, export on exit. |
 | `MindAttic.Media.Capture.WebView2` | net10.0-windows10.0.19041 | `window.mindattic.capture` JavaScript bridge for any WebView2. |
-| `MindAttic.Media.Capture.Sets` 2.0.0 | net10.0 | Preview sets: `preview.json` model, store (create, list, import under a per-set lock), media kinds, Media.Viewer handoff. |
-| `MindAttic.Media.Capture.Web` | net10.0 | Headless web page screenshots and video through Playwright and the installed Microsoft Edge, with capture sidecars. |
+| `MindAttic.Media.Capture.Sets` 2.1.0 | net10.0 | Preview sets: `preview.json` model, store (create, list, import under a per-set lock), media kinds, Media.Viewer handoff. |
+| `MindAttic.Media.Capture.Web` 1.1.0 | net10.0 | Headless web page screenshots and video through Playwright and the installed Microsoft Edge, with capture sidecars. |
 | `capture.exe` (agent) | net10.0-windows10.0.19041 | CLI and localhost API: record any app with no code changes, serve browser pages and scripts, finalize and recover sessions. |
 | `com.mindattic.media.capture` (Unity) | Unity 6, Windows | Game-view capture via GPU readback, game audio, Play Mode menu; reads `-capture` from the player command line. |
 
