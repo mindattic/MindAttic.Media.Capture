@@ -22,6 +22,7 @@ internal sealed class Recorder : IAsyncDisposable
     public TimeSpan Elapsed => _clock.Elapsed;
     /// <summary>Where the latest recording or screenshot went (its session .log is there too).</summary>
     public string? LastSessionFolder { get; private set; }
+    private string? _recordingFolder;
 
     public event Action? StateChanged;
 
@@ -36,7 +37,7 @@ internal sealed class Recorder : IAsyncDisposable
         try
         {
             _engine = await CaptureEngine.StartNewAsync(new DesktopCaptureHost(target), _options(appName));
-            LastSessionFolder = _engine.SessionFolder;
+            LastSessionFolder = _recordingFolder = _engine.SessionFolder;
             _valveExport = null;
             _engine.Captured += r =>
             {
@@ -74,6 +75,8 @@ internal sealed class Recorder : IAsyncDisposable
         {
             await _engine.DisposeAsync();
             _engine = null;
+            // A screenshot taken mid-recording moved LastSessionFolder; the stop report belongs to the recording.
+            LastSessionFolder = _recordingFolder;
             SetState(RecorderState.Idle);
         }
         // Stopped by the valve: the engine's own shutdown exported the recording, so this stop found nothing to stop.
