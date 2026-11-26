@@ -14,7 +14,7 @@ class MINDATTICMEDIACAPTURE_API UMindAtticCaptureSettings : public UDeveloperSet
 public:
 	UMindAtticCaptureSettings();
 
-	/// The folder name under R:\MindAttic\Capture. Empty: the repo folder holding the .uproject (CaptureNaming.RepoName),
+	/// The folder name under R:\MindAttic\Media\Capture. Empty: the repo folder holding the .uproject (CaptureNaming.RepoName),
 	/// else the project name.
 	UPROPERTY(Config, EditAnywhere, Category = "Capture")
 	FString AppName;

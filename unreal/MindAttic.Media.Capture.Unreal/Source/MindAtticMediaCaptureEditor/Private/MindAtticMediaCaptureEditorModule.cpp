@@ -18,12 +18,17 @@ namespace MindAttic::Media::Capture::Editor
 	{
 		bool Playing() { return GEditor && GEditor->PlayWorld != nullptr; }
 
-		/// R:\MindAttic\Media\Capture\<AppName>, else the capture root when the app has no folder yet.
+		/// R:\MindAttic\Media\Capture\<AppName>; else the legacy R:\MindAttic\Capture\<AppName> when only that one exists (LEGACY-ROOT);
+		/// else the capture root when the app has no folder yet.
 		FString CaptureRoot()
 		{
 			const FString root = TEXT("R:\\MindAttic\\Media\\Capture");
-			const FString app = FPaths::Combine(root, GetDefault<UMindAtticCaptureSettings>()->ResolveAppName());
-			return IFileManager::Get().DirectoryExists(*app) ? app : root;
+			const FString appName = GetDefault<UMindAtticCaptureSettings>()->ResolveAppName();
+			const FString app = FPaths::Combine(root, appName);
+			if (IFileManager::Get().DirectoryExists(*app)) return app;
+			const FString legacy = FPaths::Combine(TEXT("R:\\MindAttic\\Capture"), appName); // LEGACY-ROOT
+			if (IFileManager::Get().DirectoryExists(*legacy)) return legacy; // LEGACY-ROOT
+			return root;
 		}
 
 		void OpenFolder()
@@ -89,7 +94,7 @@ namespace MindAttic::Media::Capture::Editor
 			FToolMenuSection& output = menu->AddSection(TEXT("Output"), LOCTEXT("Output", "Output"));
 			output.AddMenuEntry(TEXT("OpenCaptureFolder"),
 				LOCTEXT("OpenCaptureFolder", "Open Capture Folder"),
-				LOCTEXT("OpenCaptureFolderTip", "The running session's folder, else R:\\MindAttic\\Media\\Capture\\<AppName>."),
+				LOCTEXT("OpenCaptureFolderTip", "The running session's folder, else R:\\MindAttic\\Media\\Capture\\<AppName> (or an older R:\\MindAttic\\Capture\\<AppName> when only that exists)."), // LEGACY-ROOT
 				FSlateIcon(), FUIAction(FExecuteAction::CreateStatic(&OpenFolder)));
 			output.AddMenuEntry(TEXT("OpenLastPreviewSet"),
 				LOCTEXT("OpenLastPreviewSet", "Open Last Preview Set"),

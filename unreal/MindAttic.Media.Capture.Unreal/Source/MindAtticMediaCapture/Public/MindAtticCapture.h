@@ -5,7 +5,7 @@
 // -RenderOffScreen or -capture-source=frames, its own frames through a shared-memory ring) and its command line,
 // and drives it over a pipe: one JSON request a line on its stdin, one JSON reply or notice a line from its stdout
 // (docs/design/engine-host.md). Off unless -capture is on the command line; -capture video / screen N /
-// -capture-config path.json; output in R:\MindAttic\Capture\<AppName>\. The module ticks this itself and shuts it
+// -capture-config path.json; output in R:\MindAttic\Media\Capture\<AppName>\. The module ticks this itself and shuts it
 // down on exit; the game only raises events, markers, screenshots and commands.
 
 #include "CoreMinimal.h"
