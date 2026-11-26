@@ -41,6 +41,13 @@ Programmatic video capture and screenshots for MindAttic games and apps: trailer
 | `capture.exe` (agent) | net10.0-windows10.0.19041 | CLI and localhost API: record any app with no code changes, serve browser pages and scripts, finalize and recover sessions. |
 | `com.mindattic.media.capture` (Unity) | Unity 6, Windows | Game-view capture via GPU readback, game audio, Play Mode menu; reads `-capture` from the player command line. |
 
+**Engine packages** (the engine is the suffix; each reads `-capture` from the game's command line):
+
+| Package | Path | What it does |
+|---|---|---|
+| `MindAttic.Media.Capture.Unity` | `unity\com.mindattic.media.capture` | Unity 6 package, in-process: GPU readback, game audio, Play Mode menu. |
+| `MindAttic.Media.Capture.Unreal` | `unreal\MindAttic.Media.Capture.Unreal` | Unreal plugin (Win64), out-of-process through the installed agent's `capture host`; C++ and Blueprint API, preview sets, editor menu. See its [README](unreal/MindAttic.Media.Capture.Unreal/README.md). |
+
 The agent and the tray recorder are installed together (see Install and deploy below). With the agent installed, apps hand their session export to it and exit immediately.
 
 ## Install and deploy
@@ -379,7 +386,7 @@ dotnet test  MindAttic.Media.Capture.slnx      # engine and desktop tests need f
 
 Source layout: `src\` holds the core, Windows, Wpf, WebView2, Sets, Web, Agent and Tray projects
 (`MindAttic.Media.Capture.*`, namespaces the same); `tests\` holds
-`MindAttic.Media.Capture.Tests` and `MindAttic.Media.Capture.Windows.Tests`; `unity\` is the Unity package and `js\`
+`MindAttic.Media.Capture.Tests` and `MindAttic.Media.Capture.Windows.Tests`; `unity\` is the Unity package, `unreal\` the Unreal plugin and `js\`
 the JavaScript client. `capture recover` with no root also scans the fallback output folder.
 
 ## MindAttic.Media.Capture.Unity
