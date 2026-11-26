@@ -92,8 +92,57 @@ internal sealed class TrayApp : ApplicationContext
 
     private string? TryRegisterHotkeys()
     {
-        var problems = _settings.Hotkeys().Select(h => _hotkeys.Register(h.Action, h.Keys)).OfType<string>().ToList();
-        return problems.Count > 0 ? string.Join(Environment.NewLine, problems) : null;
+        _hotkeyProblems.Clear();
+        foreach (var (action, keys) in _settings.Hotkeys())
+            if (_hotkeys.Register(action, keys) is { } problem) _hotkeyProblems[action] = problem;
+        return _hotkeyProblems.Count > 0 ? string.Join(Environment.NewLine, _hotkeyProblems.Values) : null;
+    }
+
+    // Why each hotkey that should be bound isn't (another app holds it, or it doesn't parse); shown in the Hotkeys menu.
+    private readonly Dictionary<TrayHotkey, string> _hotkeyProblems = [];
+
+    // A hotkey change saved in Vault that was refused, so the previous hotkeys are still in use; null once one applies.
+    private string? _refusedHotkeySave;
+
+    /// <summary>What each hotkey does, as the Hotkeys menu names it.</summary>
+    internal static string HotkeyLabel(TrayHotkey hotkey) => hotkey switch
+    {
+        TrayHotkey.Record => "Record armed target",
+        TrayHotkey.RecordFocused => "Record focused window",
+        TrayHotkey.Screenshot => "Screenshot armed target",
+        _ => hotkey.ToString(),
+    };
+
+    /// <summary>
+    /// Hotkeys: each binding as it is now (off, or why it isn't bound), any refused change from Vault, and
+    /// Change Hotkeys... which opens the Capture tab in MindAttic.Vault.Desktop; saves there re-register live.
+    /// </summary>
+    private ToolStripMenuItem HotkeysMenu()
+    {
+        var menu = new ToolStripMenuItem("Hotkeys");
+        foreach (var (action, keys) in _settings.Hotkeys().OrderBy(h => h.Action == TrayHotkey.Screenshot))
+        {
+            var binding = string.IsNullOrWhiteSpace(keys) ? "Off" : keys;
+            var text = _hotkeyProblems.ContainsKey(action) ? $"{HotkeyLabel(action)} (not available)" : HotkeyLabel(action);
+            menu.DropDownItems.Add(new ToolStripMenuItem(text, null, (_, _) => OpenSettings())
+            {
+                ShortcutKeyDisplayString = binding,
+                ToolTipText = _hotkeyProblems.TryGetValue(action, out var why) ? why : "Click to change it in Settings.",
+                ForeColor = _hotkeyProblems.ContainsKey(action) ? Color.Firebrick : SystemColors.ControlText,
+            });
+        }
+        if (_refusedHotkeySave is { } refused)
+        {
+            menu.DropDownItems.Add(new ToolStripSeparator());
+            menu.DropDownItems.Add(new ToolStripMenuItem(Ellipsize("Change not applied: " + refused), null, (_, _) => OpenSettings())
+            {
+                ToolTipText = refused + Environment.NewLine + "The previous hotkeys are still in use.",
+                ForeColor = Color.Firebrick,
+            });
+        }
+        menu.DropDownItems.Add(new ToolStripSeparator());
+        menu.DropDownItems.Add(new ToolStripMenuItem("Change Hotkeys...", null, (_, _) => OpenSettings()));
+        return menu;
     }
 
     /// <summary>Settings are edited in MindAttic.Vault.Desktop; its saves come back through the file watcher.</summary>
@@ -121,8 +170,10 @@ internal sealed class TrayApp : ApplicationContext
             {
                 (_settings.RecordHotkey, _settings.ScreenshotHotkey, _settings.FocusedRecordHotkey) = (oldRecord, oldShot, oldFocused);
                 TryRegisterHotkeys();
+                _refusedHotkeySave = problem.Replace(Environment.NewLine, " ");
                 ShowError("Hotkey not available", problem + Environment.NewLine + "Keeping the previous hotkeys.");
             }
+            else _refusedHotkeySave = null;
         }
         _settings.OutputRoot = next.OutputRoot;
         _settings.DefaultVideo = next.DefaultVideo;
@@ -228,6 +279,7 @@ internal sealed class TrayApp : ApplicationContext
         _menu.Items.Add(new ToolStripMenuItem("Show Last Capture in Folder", null, (_, _) => ShowInExplorer(last!)) { Enabled = last is not null });
         _menu.Items.Add(new ToolStripMenuItem("Open Captures Folder", null, (_, _) => OpenCapturesFolder()));
         _menu.Items.Add(new ToolStripSeparator());
+        _menu.Items.Add(HotkeysMenu());
         _menu.Items.Add(new ToolStripMenuItem("Settings...", null, (_, _) => OpenSettings()));
         _menu.Items.Add(new ToolStripMenuItem("Exit", null, (_, _) => _ = ExitAsync()));
     }

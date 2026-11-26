@@ -74,8 +74,9 @@ internal sealed class TraySettings
     private static readonly JsonSerializerOptions LegacyJson = new() { Converters = { new JsonStringEnumConverter() } };
 
     /// <summary>Starts recording the armed target, or stops the recording in progress.</summary>
-    [Setting("Start / stop recording", Group = "Hotkeys", Order = 1,
-        Help = "Ctrl, Alt and/or Shift plus a key, e.g. Ctrl+Alt+Shift+R. Empty turns the hotkey off.")]
+    [Setting("Start / stop recording the armed target", Group = "Hotkeys", Order = 1,
+        Help = "Records the screen, app or area last chosen in the tray menu. Ctrl, Alt and/or Shift plus a key, e.g. "
+            + "Ctrl+Alt+Shift+R. Empty turns the hotkey off. A key another app holds is refused (the tray's Hotkeys menu says so) and the previous one kept.")]
     public string RecordHotkey { get; set; } = "Ctrl+Alt+Shift+R";
 
     /// <summary>
@@ -87,7 +88,7 @@ internal sealed class TraySettings
     public string FocusedRecordHotkey { get; set; } = "Ctrl+Alt+Shift+F";
 
     /// <summary>Takes a screenshot of the armed target.</summary>
-    [Setting("Screenshot", Group = "Hotkeys", Order = 3, Help = "Takes a screenshot of the armed target, e.g. Ctrl+Alt+Shift+S.")]
+    [Setting("Screenshot the armed target", Group = "Hotkeys", Order = 3, Help = "Takes a screenshot of the armed target, e.g. Ctrl+Alt+Shift+S. Empty turns it off.")]
     public string ScreenshotHotkey { get; set; } = "Ctrl+Alt+Shift+S";
 
     /// <summary>Where captures go; empty uses capture.json's outputRoot or the engine default (R:\MindAttic\Media\Capture).</summary>
