@@ -29,5 +29,7 @@ FString UMindAtticCaptureSettings::ResolveAppName() const
 FString UMindAtticCaptureSettings::ResolveDefaultsFile() const
 {
 	if (DefaultsFile.IsEmpty()) return FString();
+	// Documented as project-relative, but an absolute path is honoured as it is (Combine would append it to the project dir).
+	if (!FPaths::IsRelative(DefaultsFile)) return FPaths::ConvertRelativePathToFull(DefaultsFile);
 	return FPaths::ConvertRelativePathToFull(FPaths::Combine(FPaths::ProjectDir(), DefaultsFile));
 }
