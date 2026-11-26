@@ -164,10 +164,17 @@ internal sealed class TrayApp : ApplicationContext
             || next.FocusedRecordHotkey != _settings.FocusedRecordHotkey)
         {
             var (oldRecord, oldShot, oldFocused) = (_settings.RecordHotkey, _settings.ScreenshotHotkey, _settings.FocusedRecordHotkey);
+            var before = _settings.Hotkeys();
             (_settings.RecordHotkey, _settings.ScreenshotHotkey, _settings.FocusedRecordHotkey) =
                 (next.RecordHotkey, next.ScreenshotHotkey, next.FocusedRecordHotkey);
-            if (TryRegisterHotkeys() is { } problem)
+            TryRegisterHotkeys();
+            // Only a binding this save changed can refuse it: one that was already unbound (another app holds it)
+            // must not veto an unrelated, valid change.
+            var changed = _settings.Hotkeys().Where(h => before.First(b => b.Action == h.Action).Keys != h.Keys).Select(h => h.Action).ToList();
+            var refused = changed.Where(_hotkeyProblems.ContainsKey).Select(a => _hotkeyProblems[a]).ToList();
+            if (refused.Count > 0)
             {
+                var problem = string.Join(Environment.NewLine, refused);
                 (_settings.RecordHotkey, _settings.ScreenshotHotkey, _settings.FocusedRecordHotkey) = (oldRecord, oldShot, oldFocused);
                 TryRegisterHotkeys();
                 _refusedHotkeySave = problem.Replace(Environment.NewLine, " ");
