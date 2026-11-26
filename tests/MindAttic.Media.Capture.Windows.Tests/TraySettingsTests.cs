@@ -46,6 +46,17 @@ public class TraySettingsTests
     }
 
     [Test]
+    public void Setting_FocusedRecordHotkey_ImportsRoundTripsAndIsRegistered()
+    {
+        Assert.That(Load().FocusedRecordHotkey, Is.EqualTo("Ctrl+Alt+Shift+F"), "the default when nothing is saved");
+        WriteLegacy("""{ "FocusedRecordHotkey": "Ctrl+F8" }""");
+        Assert.That(Load().FocusedRecordHotkey, Is.EqualTo("Ctrl+F8"), "a saved value imported");
+        var s = RoundTrip(Store(), x => x.FocusedRecordHotkey = "Alt+F11");
+        Assert.That(s.Hotkeys(), Does.Contain((TrayHotkey.RecordFocused, "Alt+F11")), "the tray registers it");
+        Assert.That(GlobalHotkeys.TryParse(s.FocusedRecordHotkey, out _, out _), Is.True);
+    }
+
+    [Test]
     public void Setting_ScreenshotHotkey_ImportsRoundTripsAndIsRegistered()
     {
         WriteLegacy("""{ "ScreenshotHotkey": "Alt+PrintScreen" }""");
