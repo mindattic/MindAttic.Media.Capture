@@ -45,17 +45,25 @@ The agent and the tray recorder are installed together (see Install and deploy b
 
 ## Install and deploy
 
-Run `run.ps1` from the repo root. It installs the agent (`capture.exe`) and tray recorder (`capture-tray.exe`) only when the source is newer than the installed copy, so it is cheap to run every time.
+`run.ps1` (or a double-click on `run.bat` beside it) opens the MindAttic run menu from the shared `deploy-lib.ps1`:
+
+1. **Redeploy** builds the agent (`capture.exe`) and tray recorder (`capture-tray.exe`) to `R:\MindAttic\Apps\MindAttic.Media.Capture\Debug` and `\Release` (both framework-dependent), then installs the Release build.
+2. **Run Debug** runs `Debug\capture-tray.exe` in the console; extra arguments pass through.
+3. **Run Release** starts `Release\capture-tray.exe` as a double-click would.
+
+Picks combine: `13` is Deploy & Run.
 
 ```powershell
-.\run.ps1               # install if stale
-.\run.ps1 -Force        # install even if the installed copy looks current
-.\run.ps1 -Launch       # also start the tray recorder
+.\run.ps1                         # the menu
+.\run.ps1 -Redeploy               # build both configs and install the Release build (no prompt: agents use this)
+.\run.ps1 -Redeploy -RunRelease   # deploy and run (-Launch is the old name for it)
+.\run.ps1 -Redeploy -DryRun       # print what it would build
 ```
 
-- Binaries stay in `%LOCALAPPDATA%\MindAttic\Capture\bin`, where `DesktopCapture` finds the agent for other apps.
-- It writes `C:\Apps\MindAttic.Media.Capture\run.bat` (under `%LOCALAPPDATA%\Programs` when `C:\Apps` is missing) and removes the pre-rename `C:\Apps\MindAttic.Capture` folder and `MindAttic Capture` shortcut. The desktop shortcut `MindAttic Media Capture` opens that file, which asks first: `1) Deploy & Run` reinstalls (`-Force -Launch`) and starts the tray recorder; `2) Run` just starts the installed tray recorder. `.\run.ps1 -LauncherOnly` rewrites the launcher and shortcut without installing anything.
-- `tools\install.ps1` is the underlying installer; add `-AddToPath` to get `capture` on PATH everywhere. A file in use is renamed to `*.old` and replaced, so installing is safe while an export runs.
+- The Release build is installed to `%LOCALAPPDATA%\MindAttic\Capture\bin`, where `DesktopCapture` finds the agent for other apps; the desktop shortcut `MindAttic Media Capture` opens the tray recorder there. A tray running from there is stopped for the install and started again afterwards.
+- Each build runs `capture-tray.exe --write-settings-manifest`, so MindAttic Vault shows that build's settings.
+- It removes the old launcher folders (`C:\Apps\MindAttic.Media.Capture`, `C:\Apps\MindAttic.Capture`, or the same under `%LOCALAPPDATA%\Programs`).
+- `tools\install.ps1` is the underlying installer (it publishes on its own, or copies a build with `-From <folder>`); add `-AddToPath` to get `capture` on PATH everywhere. A file in use is renamed to `*.old` and replaced, so installing is safe while an export runs.
 
 ## Tray recorder
 
@@ -404,7 +412,7 @@ The repo, projects, packages, namespaces and Unity package were renamed to MindA
 | namespaces `MindAttic.Capture.*` | `MindAttic.Media.Capture.*` |
 | Unity `com.mindattic.capture` (`unity/com.mindattic.capture`) | `com.mindattic.media.capture` (`unity/com.mindattic.media.capture`) |
 | `MindAttic.Capture.slnx`, github.com/mindattic/MindAttic.Capture | `MindAttic.Media.Capture.slnx`, github.com/mindattic/MindAttic.Media.Capture |
-| `C:\Apps\MindAttic.Capture`, "MindAttic Capture" shortcut | `C:\Apps\MindAttic.Media.Capture`, "MindAttic Media Capture" shortcut (`run.ps1` removes the old ones) |
+| `C:\Apps\MindAttic.Capture`, "MindAttic Capture" shortcut | `R:\MindAttic\Apps\MindAttic.Media.Capture`, "MindAttic Media Capture" shortcut (`run.ps1` removes the old ones) |
 
 To move a consumer: change each `PackageReference` id (and version to 1.0.0), replace `using MindAttic.Capture`
 with `using MindAttic.Media.Capture`, and point `Packages/manifest.json` at

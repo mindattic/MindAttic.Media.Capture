@@ -1,141 +1,91 @@
+#Requires -Version 5.1
 <#
 .SYNOPSIS
-  Installs the capture agent and tray recorder (tools\install.ps1) when the source is newer than the installed copy,
-  and writes C:\Apps\MindAttic.Media.Capture\run.bat (removing a stale deploy.bat), which the desktop shortcut opens
-  (M.CAPT-T37). The install from before the MindAttic.Media.Capture rename (C:\Apps\MindAttic.Capture and the
-  "MindAttic Capture" desktop shortcut) is removed (M.CAPT-T176).
+    MindAttic.Media.Capture's run menu: 1) Redeploy  2) Run Debug  3) Run Release  (the MindAttic standard, MAT-T279).
+
 .DESCRIPTION
-  The binaries stay in %LOCALAPPDATA%\MindAttic\Capture\bin: DesktopCapture finds the agent there for other apps.
-  The launcher is rewritten on every run. It opens a menu first (MAT-T67): 1) Deploy & Run reruns this script with
-  -Force -Launch, so it reinstalls even when nothing looks stale, then starts the tray recorder; 2) Run starts the
-  installed tray recorder without calling this script (deploying first if nothing is installed yet). This script
-  itself never prompts, so agents and /deploy can run it unattended.
-.PARAMETER Force
-  Install even when the installed copy is newer than every source file.
-.PARAMETER Launch
-  Start the tray recorder when done (unless it's already running).
-.PARAMETER LauncherOnly
-  Only write the launcher and point the desktop shortcut at it, then exit: nothing is built, installed or stopped.
+    A thin wrapper over the shared deploy-lib.ps1 (Invoke-AppRun, MAT-T300). run.bat beside it (written by
+    deploy-lib.ps1's Write-RunBat) opens the same menu on a double-click.
+      1) Redeploy     builds the capture agent (capture.exe) and the tray recorder (capture-tray.exe) to
+                      R:\MindAttic\Apps\MindAttic.Media.Capture\{Debug,Release}, both framework-dependent
+      2) Run Debug    R:\...\Debug\capture-tray.exe in this console; extra arguments pass through
+      3) Run Release  R:\...\Release\capture-tray.exe, started the way a double-click would start it
+    Picks combine: 13 is Deploy & Run. Unattended callers (agents, /deploy) pass -Redeploy: no switch opens the menu.
+
+    Capture's own differences, in the override block below:
+      - Plan publishes the agent and tray projects only, not single-file (the agent's Playwright driver sits beside
+        it in .playwright).
+      - PostBuild runs the tray with --write-settings-manifest so MindAttic Vault shows this build's settings.
+      - After the Release build it stops the tray running from %LOCALAPPDATA%\MindAttic\Capture\bin, installs that
+        build there (tools\install.ps1 -From: DesktopCapture finds capture.exe there, and the "MindAttic Media
+        Capture" desktop shortcut opens the tray from there), restarts the tray if it was running, and removes the
+        old launcher folders (C:\Apps or %LOCALAPPDATA%\Programs, as MindAttic.Media.Capture or MindAttic.Capture).
+
+    Callers from before the shared menu: -Launch means -Redeploy -RunRelease, -Force means -Redeploy.
+
+.EXAMPLE
+    .\run.ps1                    the menu
+    .\run.ps1 -Redeploy          build both configs and install the Release build
+    .\run.ps1 -Redeploy -RunRelease -DryRun
 #>
-param([switch]$Force, [switch]$Launch, [switch]$LauncherOnly)
+param(
+    [switch]$Redeploy,
+    [switch]$RunDebug,
+    [switch]$RunRelease,
+    [switch]$DryRun,
+    [switch]$Launch,
+    [switch]$Force,
+    [Parameter(ValueFromRemainingArguments = $true)][string[]]$AppArgs = @()
+)
 $ErrorActionPreference = 'Stop'
-$repo = $PSScriptRoot
-$bin = Join-Path $env:LOCALAPPDATA 'MindAttic\Capture\bin'
-$tray = Join-Path $bin 'capture-tray.exe'
-$agent = Join-Path $bin 'capture.exe'
-$apps = if (Test-Path 'C:\Apps') { 'C:\Apps' } else { Join-Path $env:LOCALAPPDATA 'Programs' }
-$appDir = Join-Path $apps 'MindAttic.Media.Capture'
-$launcher = Join-Path $appDir 'run.bat'
-$staleLauncher = Join-Path $appDir 'deploy.bat'
-$oldAppDir = Join-Path $apps 'MindAttic.Capture'
-$desktop = [Environment]::GetFolderPath('Desktop')
-$oldShortcut = Join-Path $desktop 'MindAttic Capture.lnk'
-$sourceExts = @('.cs', '.csproj', '.xaml', '.json', '.props', '.targets', '.resx', '.manifest', '.ico', '.png')
 
-# Stale when any source file of the projects the agent and tray build from is newer than the older of the two exes.
-function Test-Stale {
-  if ($Force -or -not (Test-Path $tray) -or -not (Test-Path $agent)) { return $true }
-  $time = @((Get-Item $tray).LastWriteTimeUtc, (Get-Item $agent).LastWriteTimeUtc) | Sort-Object | Select-Object -First 1
-  $props = Join-Path $repo 'Directory.Build.props'
-  if ((Test-Path $props) -and (Get-Item $props).LastWriteTimeUtc -gt $time) { return $true }
-  $newer = Get-ChildItem -Path (Join-Path $repo 'src') -Recurse -File -ErrorAction SilentlyContinue |
-    Where-Object { $_.FullName -notmatch '\\(bin|obj)\\' -and ($sourceExts -contains $_.Extension.ToLowerInvariant()) -and $_.LastWriteTimeUtc -gt $time } |
-    Select-Object -First 1
-  return [bool]$newer
+$repoRoot = $PSScriptRoot
+$Override = @{
+    Exe       = 'capture-tray.exe'
+    Plan      = @{
+        Kind    = 'script'
+        Command = 'dotnet publish src\MindAttic.Media.Capture.Agent\MindAttic.Media.Capture.Agent.csproj -c {config} -o "{out}" -nologo -v q && dotnet publish src\MindAttic.Media.Capture.Tray\MindAttic.Media.Capture.Tray.csproj -c {config} -o "{out}" -nologo -v q'
+    }
+    PostBuild = {
+        param($Config, $Out)
+        $manifest = Start-Process -FilePath (Join-Path $Out 'capture-tray.exe') -ArgumentList '--write-settings-manifest' -WorkingDirectory $Out -Wait -PassThru
+        if ($manifest.ExitCode -ne 0) { Write-Host "  (--write-settings-manifest exited $($manifest.ExitCode); the tray writes it on its next start)" -ForegroundColor DarkYellow }
+        if ($Config -ne 'Release') { return }
+
+        $bin = Join-Path $env:LOCALAPPDATA 'MindAttic\Capture\bin'
+        $tray = Join-Path $bin 'capture-tray.exe'
+        $installedTray = @(Get-Process 'capture-tray' -ErrorAction SilentlyContinue | Where-Object { $_.Path -eq $tray })
+        $installedTray | Stop-Process -Force
+        & (Join-Path $repoRoot 'tools\install.ps1') -From $Out
+        if ($installedTray.Count) { Start-Process -FilePath $tray -WorkingDirectory $bin }
+
+        foreach ($apps in 'C:\Apps', (Join-Path $env:LOCALAPPDATA 'Programs')) {
+            foreach ($oldName in 'MindAttic.Media.Capture', 'MindAttic.Capture') {
+                $oldDir = Join-Path $apps $oldName
+                if (Test-Path -LiteralPath $oldDir) {
+                    Remove-Item -LiteralPath $oldDir -Recurse -Force
+                    Write-Host "  Removed old launcher folder $oldDir" -ForegroundColor DarkGray
+                }
+            }
+        }
+    }
 }
 
-# install.ps1 points the shortcut at the exe; this one opens the launcher instead, keeping the exe's icon, in a normal
-# window (not minimized) so the launcher's menu shows.
-function Set-Shortcut {
-  $shortcut = (New-Object -ComObject WScript.Shell).CreateShortcut((Join-Path $desktop 'MindAttic Media Capture.lnk'))
-  if ($shortcut.TargetPath -ne $launcher -or $shortcut.WindowStyle -ne 1) {
-    $shortcut.TargetPath = $launcher
-    $shortcut.WorkingDirectory = $bin
-    $shortcut.IconLocation = "$tray,0"
-    $shortcut.WindowStyle = 1
-    $shortcut.Description = 'MindAttic Media Capture tray recorder'
-    $shortcut.Save()
-    Write-Host "Desktop shortcut: MindAttic Media Capture -> $launcher"
-  }
+function Find-DeployLib {
+    if ($env:MINDATTIC_DEPLOY_LIB -and (Test-Path -LiteralPath $env:MINDATTIC_DEPLOY_LIB)) { return $env:MINDATTIC_DEPLOY_LIB }
+    $roots = @()
+    $d = $PSScriptRoot
+    while ($d) { $roots += $d; $d = Split-Path -Parent $d }
+    $roots += 'D:\Projects\MindAttic'
+    foreach ($r in $roots) {
+        foreach ($rel in 'MindAttic.Agency\shared\deploy-lib.ps1', 'mindattic-agent-standard\shared\deploy-lib.ps1') {
+            $p = Join-Path $r $rel
+            if (Test-Path -LiteralPath $p) { return $p }
+        }
+    }
+    throw 'deploy-lib.ps1 not found: clone MindAttic.Agency beside this repo, or set MINDATTIC_DEPLOY_LIB to its path.'
 }
 
-# The launcher folder and shortcut from before the MindAttic.Media.Capture rename; the binaries stay in $bin.
-function Remove-OldInstall {
-  if (Test-Path -LiteralPath $oldShortcut) { Remove-Item -LiteralPath $oldShortcut -Force; Write-Host "Removed $oldShortcut" }
-  if ((Test-Path -LiteralPath $oldAppDir) -and $oldAppDir -ne $appDir) {
-    Remove-Item -LiteralPath $oldAppDir -Recurse -Force
-    Write-Host "Removed $oldAppDir"
-  }
-}
-
-# Written on every run, so an existing install picks up launcher changes without a reinstall.
-New-Item -ItemType Directory -Force -Path $appDir | Out-Null
-$launcherText = @"
-@echo off
-title MindAttic Media Capture
-rem Generated by $repo\run.ps1 - edits here are overwritten.
-set "DEPLOY_PS1=$repo\run.ps1"
-set "BIN=$bin"
-set "TRAY=$tray"
-echo.
-echo   MindAttic Media Capture
-echo     1^) Deploy ^& Run
-echo     2^) Run
-echo.
-choice /c 12 /n /m "  Choose 1 or 2: "
-if errorlevel 2 goto run
-:deploy
-if not exist "%DEPLOY_PS1%" (
-    echo Repo not found - opening the installed copy.
-    goto run
-)
-powershell -NoProfile -ExecutionPolicy Bypass -File "%DEPLOY_PS1%" -Force -Launch %*
-if errorlevel 1 (
-    echo Redeploy failed - opening the installed copy.
-    start "" /d "%BIN%" "%TRAY%"
-    pause
-)
-exit /b 0
-:run
-if not exist "%TRAY%" (
-    if exist "%DEPLOY_PS1%" (
-        echo MindAttic Media Capture is not installed yet - deploying it first.
-        goto deploy
-    )
-    echo MindAttic Media Capture is not installed and its repo is missing.
-    pause
-    exit /b 1
-)
-tasklist /fi "imagename eq capture-tray.exe" 2>nul | find /i "capture-tray.exe" >nul || start "" /d "%BIN%" "%TRAY%"
-exit /b 0
-"@ -replace "`r?`n", "`r`n"  # CRLF: cmd can miss a goto label in an LF-only batch file
-if (-not (Test-Path $launcher) -or (Get-Content -Raw $launcher) -ne $launcherText) {
-  Set-Content -LiteralPath $launcher -Value $launcherText -Encoding ascii -NoNewline
-  Write-Host "Wrote $launcher"
-}
-# deploy.bat was the launcher's name before the deploy -> run rename (MAT-T68).
-if (Test-Path $staleLauncher) { Remove-Item -LiteralPath $staleLauncher -Force }
-if ($LauncherOnly) { Set-Shortcut; Remove-OldInstall; return }
-
-if (Test-Stale) {
-  # A running tray holds its files; install.ps1 renames those aside, but the old tray would keep running, so restart it.
-  # Only the tray running from $bin: a capture-tray.exe elsewhere (a dev build, another copy) is left alone.
-  $installedTray = @(Get-Process 'capture-tray' -ErrorAction SilentlyContinue | Where-Object { $_.Path -eq $tray })
-  $wasRunning = $installedTray.Count -gt 0
-  $installedTray | Stop-Process -Force
-  & (Join-Path $repo 'tools\install.ps1')
-  # An apphost keeps its old time when only a library's method bodies changed, which would read stale on every open.
-  foreach ($exe in $tray, $agent) { (Get-Item $exe).LastWriteTimeUtc = [DateTime]::UtcNow }
-  # LAMP step 7 (M.CAPT-T88): refresh settings.manifest.json now, so MindAttic Vault shows this build's settings even
-  # before the tray next starts.
-  $manifest = Start-Process -FilePath $tray -ArgumentList '--write-settings-manifest' -WorkingDirectory $bin -Wait -PassThru
-  if ($manifest.ExitCode -ne 0) { Write-Host "(--write-settings-manifest exited $($manifest.ExitCode); the tray writes it on its next start)" }
-  if ($wasRunning) { $Launch = $true }
-} else {
-  Write-Host 'MindAttic Media Capture is up to date.'
-}
-
-Set-Shortcut
-Remove-OldInstall
-
-if ($Launch -and -not (Get-Process 'capture-tray' -ErrorAction SilentlyContinue)) { Start-Process $tray -WorkingDirectory $bin }
+. (Find-DeployLib)
+Invoke-AppRun -Repo $PSScriptRoot -Redeploy:($Redeploy -or $Launch -or $Force) -RunDebug:$RunDebug -RunRelease:($RunRelease -or $Launch) `
+    -DryRun:$DryRun -AppArgs $AppArgs -Override $Override

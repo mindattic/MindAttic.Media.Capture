@@ -3,16 +3,19 @@
 # Apps find the agent there to export sessions after they exit; add the folder to PATH to use `capture` anywhere.
 # Safe while an export is running: a file in use is renamed to *.old (the running process keeps it) and replaced;
 # leftover *.old files are removed on the next install once nothing uses them.
-param([switch]$AddToPath)
+# -From copies an existing build of both (run.ps1's Release deploy folder) instead of publishing.
+param([switch]$AddToPath, [string]$From)
 $ErrorActionPreference = 'Stop'
 $root = Split-Path -Parent $PSScriptRoot
 $bin = Join-Path $env:LOCALAPPDATA 'MindAttic\Capture\bin'
-$stage = Join-Path ([IO.Path]::GetTempPath()) ("mindattic-capture-install-" + [guid]::NewGuid().ToString('N'))
+$stage = if ($From) { (Resolve-Path -LiteralPath $From).Path } else { Join-Path ([IO.Path]::GetTempPath()) ("mindattic-capture-install-" + [guid]::NewGuid().ToString('N')) }
 New-Item -ItemType Directory -Force $bin, $stage | Out-Null
 try {
-    foreach ($p in @('MindAttic.Media.Capture.Agent', 'MindAttic.Media.Capture.Tray')) {
-        dotnet publish (Join-Path $root "src\$p\$p.csproj") -c Release -o $stage --nologo -v q
-        if ($LASTEXITCODE -ne 0) { throw "publish $p failed" }
+    if (-not $From) {
+        foreach ($p in @('MindAttic.Media.Capture.Agent', 'MindAttic.Media.Capture.Tray')) {
+            dotnet publish (Join-Path $root "src\$p\$p.csproj") -c Release -o $stage --nologo -v q
+            if ($LASTEXITCODE -ne 0) { throw "publish $p failed" }
+        }
     }
     Get-ChildItem $bin -Recurse -File -Filter *.old | ForEach-Object { Remove-Item -LiteralPath $_.FullName -ErrorAction SilentlyContinue }
     $moved = 0
@@ -30,7 +33,7 @@ try {
     }
     if ($moved -gt 0) { Write-Host "$moved file(s) were in use; the running copies were renamed to *.old and will be cleaned up next install." }
 } finally {
-    Remove-Item -LiteralPath $stage -Recurse -Force -ErrorAction SilentlyContinue
+    if (-not $From) { Remove-Item -LiteralPath $stage -Recurse -Force -ErrorAction SilentlyContinue }
 }
 # A desktop icon that launches the tray recorder (re-created each install so it always points at this copy).
 $tray = Join-Path $bin 'capture-tray.exe'
