@@ -6,7 +6,8 @@ namespace MindAttic.Media.Capture.Windows.Frames;
 
 /// <summary>
 /// The capture host for a game's own frames: video and screenshots from <see cref="FrameRingSource"/>, the same tape,
-/// ffmpeg pipeline, session folder, markers and events as window capture; audio is the system mix, as the desktop host's.
+/// ffmpeg pipeline, session folder, markers and events as window capture; audio is the system mix, as the desktop host's
+/// (none for a fixed-step game: HostCommand turns it off).
 /// </summary>
 internal sealed class FrameRingCaptureHost(FrameRingSource ring) : ICaptureHost
 {
@@ -43,7 +44,8 @@ internal sealed class FrameRingCaptureHost(FrameRingSource ring) : ICaptureHost
 /// <summary>
 /// The tape's frames from the ring, at a constant rate as WgcWindowSource sends a window's: the newest frame each tick,
 /// the last one again while the game has fed nothing newer (a hitch shows as a held frame, never as a gap in time).
-/// Ends once the game marks the ring closed.
+/// Ends once the game marks the ring closed. A fixed-step game's ring (<see cref="FrameRingSource.FixedFps"/>) is a
+/// fixed-timestep tape instead: every frame the game fed, once and in order, stamped by its index, with no wall clock.
 /// </summary>
 internal sealed class FrameRingVideoSource(FrameRingSource ring, int fps) : PushVideoSource
 {
@@ -53,7 +55,7 @@ internal sealed class FrameRingVideoSource(FrameRingSource ring, int fps) : Push
 
     public override int Width => ring.Width;
     public override int Height => ring.Height;
-    public override bool RealTime => true;
+    public override bool RealTime => ring.FixedFps <= 0;
     public override string Description => $"game frames {ring.Width}x{ring.Height}";
 
     /// <summary>Completes when the pump stops: <see cref="StopAsync"/>, or the game closed the ring.</summary>
@@ -62,7 +64,7 @@ internal sealed class FrameRingVideoSource(FrameRingSource ring, int fps) : Push
     public override Task StartAsync(IFrameSink sink, CancellationToken ct)
     {
         _running = true;
-        _pump = new Thread(() => Pump(sink)) { IsBackground = true, Name = "Frame ring pump", Priority = ThreadPriority.AboveNormal };
+        _pump = new Thread(() => { if (RealTime) Pump(sink); else PumpFixed(sink); }) { IsBackground = true, Name = "Frame ring pump", Priority = ThreadPriority.AboveNormal };
         _pump.Start();
         return Task.CompletedTask;
     }
@@ -102,6 +104,42 @@ internal sealed class FrameRingVideoSource(FrameRingSource ring, int fps) : Push
                 // Closed before that copy: the last frame the game wrote has been sent.
                 if (closed) break;
                 if (clock.ElapsedTicks - (long)(n * interval) > Stopwatch.Frequency) n = (long)(clock.ElapsedTicks / interval);
+            }
+        }
+        finally
+        {
+            TimeEndPeriod(1);
+            _ended.TrySetResult();
+        }
+    }
+
+    /// <summary>Each frame after the last one taken, in order: copied out, marked taken (which lets the game write over
+    /// its slot), then sent through the blocking sink, so a slow encoder holds the game back instead of losing frames.</summary>
+    private void PumpFixed(IFrameSink sink)
+    {
+        TimeBeginPeriod(1);
+        try
+        {
+            var frame = new byte[ring.FrameBytes];
+            var next = ring.Taken + 1;
+            while (_running)
+            {
+                var closed = ring.Closed;
+                var latest = ring.Latest;
+                if (latest < next)
+                {
+                    // Closed before that read: every frame the game wrote has been sent.
+                    if (closed) break;
+                    Thread.Sleep(1);
+                    continue;
+                }
+                // The game stopped waiting (no tape took its frames for a while): what it overwrote is gone.
+                if (latest - next >= ring.Slots) next = latest - ring.Slots + 1;
+                // A slot the game overwrote mid-copy (only once it gave up waiting) is dropped, never torn into the tape.
+                var whole = ring.TryCopy(frame, next);
+                ring.Taken = next;
+                if (whole) sink.WriteFrame(frame);
+                next++;
             }
         }
         finally

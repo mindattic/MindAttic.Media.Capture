@@ -59,6 +59,14 @@ internal sealed class HostCommand(TextWriter output)
                 ring = FrameRingSource.Open(framesName);
                 host = new FrameRingCaptureHost(ring);
                 log.Log(CaptureLogLevel.Info, $"Recording the game's frames ({ring.Width}x{ring.Height}, frame feed {framesName}).");
+                if (ring.FixedFps > 0)
+                {
+                    // Every frame the game renders is 1/fps of its time: the tape's rate is the game's, not the flags'.
+                    options.Fps = ring.FixedFps;
+                    log.Log(CaptureLogLevel.Info, $"The game steps a fixed 1/{ring.FixedFps} s a frame: a fixed-timestep tape of every frame at {ring.FixedFps}/1"
+                        + (options.Audio != AudioMode.None ? ", with no audio (the system mix runs on the wall clock, the game doesn't)." : "."));
+                    options.Audio = AudioMode.None;
+                }
             }
             else host = new DesktopCaptureHost(args.Target(), args.HostOptions());
             engine = await CaptureEngine.StartNewAsync(host, options);

@@ -8,6 +8,7 @@
 #include "Framework/Application/SlateApplication.h"
 #include "HAL/PlatformMemory.h"
 #include "HAL/PlatformMisc.h"
+#include "HAL/PlatformProcess.h"
 #include "HAL/PlatformTime.h"
 #include "Misc/App.h"
 #include "Misc/CommandLine.h"
@@ -31,7 +32,7 @@ namespace MindAttic::Media::Capture::FrameFeed
 		// The shared ring (docs/design/engine-host.md, "Frame feed"; read by FrameRingSource.cs). Little-endian,
 		// fixed offsets: a 64-byte header, Slots 32-byte slot records from byte 64, the frames from HeaderBytes on.
 		constexpr uint32 Magic = 0x52464753; // "SGFR"
-		constexpr uint32 Version = 1;
+		constexpr uint32 Version = 2;
 		constexpr int32 Slots = 3;
 		constexpr int32 HeaderBytes = 4096;
 
@@ -46,7 +47,10 @@ namespace MindAttic::Media::Capture::FrameFeed
 			volatile int64 Latest;  // the newest whole frame's sequence number (1, 2, ...); 0 before the first
 			volatile int32 Closed;  // 1 once the game stops feeding
 			int32 Fps;              // the rate the game reads back at (informational)
-			int64 Reserved[3];
+			int32 Fixed;            // version 2: the fixed-step rate (-capture-fixed), 0 when the game runs on the wall clock
+			int32 Pad;
+			volatile int64 Taken;   // version 2: the newest sequence number the host has copied out (the host writes it)
+			int64 Reserved;
 		};
 		static_assert(sizeof(FHeader) == 64, "the host reads the header at fixed offsets");
 
@@ -64,6 +68,10 @@ namespace MindAttic::Media::Capture::FrameFeed
 
 		/// Seconds between stats lines.
 		constexpr double StatsEvery = 5.0;
+
+		/// Fixed step: the longest the render thread waits for the host to take a frame (its encoder is slow, or no tape is
+		/// running) or for a readback, before it gives up waiting, logs it and goes on without the host.
+		constexpr double FixedWaitSeconds = 30.0;
 
 		struct FRenderSide
 		{
@@ -87,15 +95,18 @@ namespace MindAttic::Media::Capture::FrameFeed
 			bool Active = false;
 			double Interval = 1.0 / 60.0, NextGrab = 0;
 			std::atomic<int32> Requests{ 0 };
+			int32 Fixed = 0;               // -capture-fixed's rate, or 0
+			std::atomic<bool> Stopping{ false };
+			int64 GaveUpAt = -1;           // render thread: Taken when a wait for the host timed out; -1 while waiting
 			FRenderSide Render; // render thread only
 
 			// Stats: written on the render thread, read on the game thread.
-			std::atomic<int64> Fed{ 0 }, Skipped{ 0 }, RenderMicros{ 0 }, RenderMicrosMax{ 0 }, CopyMicros{ 0 };
+			std::atomic<int64> Fed{ 0 }, Skipped{ 0 }, RenderMicros{ 0 }, RenderMicrosMax{ 0 }, CopyMicros{ 0 }, HostWaitMicros{ 0 };
 			std::atomic<int32> Format{ PF_Unknown };
 
 			// Game-thread stats window.
 			double StatsFrom = 0, FrameSeconds = 0, WorstFrame = 0;
-			int64 Frames = 0, FedAtWindow = 0, SkippedAtWindow = 0, RenderMicrosAtWindow = 0, CopyMicrosAtWindow = 0;
+			int64 Frames = 0, FedAtWindow = 0, SkippedAtWindow = 0, RenderMicrosAtWindow = 0, CopyMicrosAtWindow = 0, HostWaitMicrosAtWindow = 0;
 		};
 
 		FState& S()
@@ -107,11 +118,40 @@ namespace MindAttic::Media::Capture::FrameFeed
 		FHeader* Header() { return reinterpret_cast<FHeader*>(S().Base); }
 		FSlot* SlotAt(int32 i) { return reinterpret_cast<FSlot*>(S().Base + sizeof(FHeader) + i * sizeof(FSlot)); }
 
+		/// Fixed step: waits until the host has taken the frame that slot `seq % Slots` holds, so no frame is overwritten
+		/// before the host copied it. After a timeout it stops waiting (logged) until the host takes a frame again.
+		void WaitForHost(int64 seq)
+		{
+			FState& s = S();
+			FHeader* header = Header();
+			const int64 need = seq - Slots;
+			if (s.GaveUpAt >= 0)
+			{
+				if (FPlatformAtomics::AtomicRead(&header->Taken) == s.GaveUpAt) return;
+				s.GaveUpAt = -1;
+				UE_LOG(LogMindAtticCapture, Display, TEXT("[MindAttic.Media.Capture] The capture host is taking frames again; the fixed-step feed waits for it."));
+			}
+			if (FPlatformAtomics::AtomicRead(&header->Taken) >= need) return;
+			const double from = FPlatformTime::Seconds();
+			while (FPlatformAtomics::AtomicRead(&header->Taken) < need && !s.Stopping.load())
+			{
+				if (FPlatformTime::Seconds() - from > FixedWaitSeconds)
+				{
+					s.GaveUpAt = FPlatformAtomics::AtomicRead(&header->Taken);
+					UE_LOG(LogMindAtticCapture, Warning, TEXT("[MindAttic.Media.Capture] The capture host took no frame in %.0f s (no tape running, or the host is gone); the fixed-step feed stops waiting and overwrites frames until it takes one."),
+						FixedWaitSeconds);
+					break;
+				}
+				FPlatformProcess::SleepNoStats(0.0002f);
+			}
+			s.HostWaitMicros.fetch_add(static_cast<int64>((FPlatformTime::Seconds() - from) * 1e6), std::memory_order_relaxed);
+		}
+
 		/// One read-back frame into the ring's next slot, as top-down BGRA at the ring's size (cropped or padded black).
 		void Write(const uint8* data, int32 pitchPixels, int32 rows, FIntPoint size, EPixelFormat format)
 		{
 			FState& s = S();
-			const uint64 c0 = FPlatformTime::Cycles64();
+			uint64 c0 = FPlatformTime::Cycles64();
 			const int32 bpp = GPixelFormats[format].BlockBytes;
 			const bool bgra = format == PF_B8G8R8A8;
 			const bool rgba = format == PF_R8G8B8A8;
@@ -128,6 +168,11 @@ namespace MindAttic::Media::Capture::FrameFeed
 			}
 			FHeader* header = Header();
 			const int64 seq = header->Latest + 1; // the render thread is the only writer
+			if (s.Fixed > 0)
+			{
+				WaitForHost(seq);
+				c0 = FPlatformTime::Cycles64(); // the copy's own time, not the wait's
+			}
 			const int32 slotIndex = static_cast<int32>(seq % Slots);
 			FSlot* slot = SlotAt(slotIndex);
 			FPlatformAtomics::InterlockedExchange(&slot->Seq, 0);
@@ -193,10 +238,9 @@ namespace MindAttic::Media::Capture::FrameFeed
 			const uint64 c0 = FPlatformTime::Cycles64();
 			FRenderSide& r = s.Render;
 			bool did = false;
-			while (r.InFlight.Num() > 0)
+			const auto copyOutOldest = [&r]
 			{
 				const int32 i = r.InFlight[0];
-				if (!r.Readbacks[i]->IsReady()) break;
 				int32 pitch = 0, rows = 0;
 				if (const void* data = r.Readbacks[i]->Lock(pitch, &rows))
 				{
@@ -205,6 +249,10 @@ namespace MindAttic::Media::Capture::FrameFeed
 				}
 				r.InFlight.RemoveAt(0);
 				r.Busy[i] = false;
+			};
+			while (r.InFlight.Num() > 0 && r.Readbacks[r.InFlight[0]]->IsReady())
+			{
+				copyOutOldest();
 				did = true;
 			}
 			if (s.Requests.exchange(0) > 0)
@@ -213,6 +261,18 @@ namespace MindAttic::Media::Capture::FrameFeed
 				int32 free = INDEX_NONE;
 				for (int32 i = 0; i < Depth && free == INDEX_NONE; ++i)
 					if (!r.Busy[i]) free = i;
+				// Fixed step: every frame is read back, so with all readbacks on the GPU, wait for the oldest one.
+				if (s.Fixed > 0 && free == INDEX_NONE && backBuffer && !backBuffer->IsMultisampled())
+				{
+					const double from = FPlatformTime::Seconds();
+					while (!r.Readbacks[r.InFlight[0]]->IsReady() && FPlatformTime::Seconds() - from < FixedWaitSeconds)
+						FPlatformProcess::SleepNoStats(0.0001f);
+					if (r.Readbacks[r.InFlight[0]]->IsReady())
+					{
+						free = r.InFlight[0];
+						copyOutOldest();
+					}
+				}
 				if (!backBuffer || backBuffer->IsMultisampled())
 				{
 				}
@@ -296,8 +356,18 @@ namespace MindAttic::Media::Capture::FrameFeed
 		header->HeaderBytes = HeaderBytes;
 		s.TargetWindow = window.Get();
 		outName = s.Name;
-		UE_LOG(LogMindAtticCapture, Display, TEXT("[MindAttic.Media.Capture] Frame feed %s: %dx%d, %d slots (the host records the game's frames%s)."), *s.Name, s.Width, s.Height,
-			Slots, FParse::Param(FCommandLine::Get(), TEXT("RenderOffScreen")) ? TEXT(": -RenderOffScreen has no window") : TEXT(", -capture-source=frames"));
+		// -capture-fixed[=fps] (60 when no rate is given): the game steps 1/fps of game time per frame, so the host takes
+		// every frame, in order, into a fixed-timestep tape at fps/1.
+		const TCHAR* line = FCommandLine::Get();
+		int32 fixedFps = 60;
+		const bool fixed = FParse::Value(line, TEXT("-capture-fixed="), fixedFps) || FParse::Param(line, TEXT("capture-fixed"));
+		s.Fixed = fixed ? FMath::Clamp(fixedFps, 1, 240) : 0;
+		header->Fixed = s.Fixed;
+		s.Stopping.store(false);
+		s.GaveUpAt = -1;
+		UE_LOG(LogMindAtticCapture, Display, TEXT("[MindAttic.Media.Capture] Frame feed %s: %dx%d, %d slots (the host records the game's frames%s)%s."), *s.Name, s.Width, s.Height,
+			Slots, FParse::Param(line, TEXT("RenderOffScreen")) ? TEXT(": -RenderOffScreen has no window") : TEXT(", -capture-source=frames"),
+			s.Fixed > 0 ? *FString::Printf(TEXT("; fixed step at %d frames/s: every frame, each waiting for the host to take it"), s.Fixed) : TEXT(""));
 		return true;
 	}
 
@@ -311,13 +381,25 @@ namespace MindAttic::Media::Capture::FrameFeed
 		Header()->Fps = fps;
 		s.Handle = FSlateApplication::Get().GetRenderer()->OnBackBufferReadyToPresent().AddStatic(&OnBackBufferReady);
 		s.Active = true;
-		UE_LOG(LogMindAtticCapture, Display, TEXT("[MindAttic.Media.Capture] Frame feed reading back %d frames/s (async, %d deep)."), fps, Depth);
+		if (s.Fixed > 0)
+		{
+			UE_LOG(LogMindAtticCapture, Display, TEXT("[MindAttic.Media.Capture] Frame feed reading back every frame (fixed step, %d deep)."), Depth);
+		}
+		else
+		{
+			UE_LOG(LogMindAtticCapture, Display, TEXT("[MindAttic.Media.Capture] Frame feed reading back %d frames/s (async, %d deep)."), fps, Depth);
+		}
 	}
 
 	void Tick()
 	{
 		FState& s = S();
 		if (!s.Active) return;
+		if (s.Fixed > 0)
+		{
+			s.Requests.store(1);
+			return;
+		}
 		const double now = FPlatformTime::Seconds();
 		if (now < s.NextGrab) return;
 		s.Requests.store(1);
@@ -349,9 +431,12 @@ namespace MindAttic::Media::Capture::FrameFeed
 			const int64 fed = s.Fed.load() - s.FedAtWindow, skipped = s.Skipped.load() - s.SkippedAtWindow;
 			const int64 renderUs = s.RenderMicros.load() - s.RenderMicrosAtWindow, copyUs = s.CopyMicros.load() - s.CopyMicrosAtWindow;
 			const int64 worstUs = s.RenderMicrosMax.exchange(0);
-			UE_LOG(LogMindAtticCapture, Display, TEXT("[MindAttic.Media.Capture] feed: game %.1f fps (%.2f ms avg, %.1f ms worst); fed %.1f frames/s %dx%d %s; render thread %.2f ms avg per fed frame (copy %.2f ms), %.2f ms worst; %lld skipped (GPU behind)"),
+			const int64 hostWaitUs = s.HostWaitMicros.load() - s.HostWaitMicrosAtWindow;
+			UE_LOG(LogMindAtticCapture, Display, TEXT("[MindAttic.Media.Capture] feed: game %.1f fps (%.2f ms avg, %.1f ms worst); fed %.1f frames/s %dx%d %s; render thread %.2f ms avg per fed frame (copy %.2f ms), %.2f ms worst; %lld skipped (GPU behind)%s"),
 				fps, avgMs, s.WorstFrame * 1000.0, fed / span, s.Width, s.Height, GPixelFormats[s.Format.load()].Name,
-				fed > 0 ? renderUs / 1000.0 / fed : 0.0, fed > 0 ? copyUs / 1000.0 / fed : 0.0, worstUs / 1000.0, skipped);
+				fed > 0 ? renderUs / 1000.0 / fed : 0.0, fed > 0 ? copyUs / 1000.0 / fed : 0.0, worstUs / 1000.0, skipped,
+				s.Fixed > 0 ? *FString::Printf(TEXT("; fixed step, %.2f ms avg waiting for the host"), fed > 0 ? hostWaitUs / 1000.0 / fed : 0.0) : TEXT(""));
+			s.HostWaitMicrosAtWindow += hostWaitUs;
 			s.FedAtWindow += fed;
 			s.SkippedAtWindow += skipped;
 			s.RenderMicrosAtWindow += renderUs;
@@ -375,6 +460,7 @@ namespace MindAttic::Media::Capture::FrameFeed
 			FSlateApplication::Get().GetRenderer()->OnBackBufferReadyToPresent().Remove(s.Handle);
 		s.Active = false;
 		s.Handle.Reset();
+		s.Stopping.store(true); // a present still waiting on the host (which is quitting) goes on
 		// No present callback runs past here; the readbacks (RHI resources) go on the render thread.
 		FlushRenderingCommands();
 		ENQUEUE_RENDER_COMMAND(MindAtticCaptureFeedRelease)([](FRHICommandListImmediate&)

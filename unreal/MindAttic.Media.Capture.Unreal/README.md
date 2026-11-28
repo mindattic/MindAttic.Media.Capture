@@ -63,6 +63,7 @@ commands.
 | `-capture-config path.json` | Bring in settings and trigger rules from a file; the only way to load one from the command line. |
 | `-capture-source=frames` / `window` | `frames` records the game's own rendered frames through a shared-memory ring; `window` forces window capture. |
 | `-RenderOffScreen` | No window exists, so the frame feed is used automatically. |
+| `-capture-fixed` / `-capture-fixed=<fps>` | With the frame feed: a frame-perfect tape for a game on a fixed time step (60 when no rate is given). Every rendered frame is read back and the game waits for the host to take each one, so the tape at fps/1 holds each frame once, in order, however slow the game or the lossless encoder; no audio. The game puts the engine on the fixed step itself (`FApp::SetUseFixedTimeStep` / `SetFixedDeltaTime`); see [engine-host.md](../../docs/design/engine-host.md#fixed-step). |
 | `-CaptureStats` | Logs the game's fps and frame times as a baseline, with no capture. |
 
 The game's whole command line goes to the host, which parses `-capture` as the repo [README](../../README.md)

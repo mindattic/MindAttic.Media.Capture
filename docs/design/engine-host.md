@@ -91,13 +91,14 @@ kept byte for byte, magic and version included, so its writer ports unchanged. T
    height * 4` bytes, named with a fresh `{GUID}` (`{xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx}`, no `Global\` prefix, so no
    administrator rights are needed), zeroes the header and fills it in. Width and height are even (the HQ tape encodes
    yuv420p straight from these frames).
-2. It starts `capture host --frames {GUID} ...` (instead of `--hwnd`). The host opens the mapping read-only, checks the
-   header and answers `ready` with `"source":"frames"` and `fps`; the game writes `fps` into the header and reads back
+2. It starts `capture host --frames {GUID} ...` (instead of `--hwnd`). The host opens the mapping (read-write: it writes
+   `taken`, below), checks the header and answers `ready` with `"source":"frames"` and `fps`; the game writes `fps` into the header and reads back
    frames at that rate.
 3. Each frame goes into the next slot (below). The host's pump sends the newest whole frame to the tape every 1/fps (the
    last one again while nothing newer came: a hitch is a held frame, not a gap). A screenshot is the first frame fed
    after the request (up to 1 s; 10 s before any frame), else the newest.
-4. On shutdown the game sets `closed` to 1 and unmaps its view; the host's pump sends the last frame and ends, and the
+4. A fixed-step game is filmed frame for frame instead: see [Fixed step](#fixed-step).
+5. On shutdown the game sets `closed` to 1 and unmaps its view; the host's pump sends the last frame and ends, and the
    host keeps its own view until it stops.
 
 ### Header (64 bytes at offset 0, little-endian)
@@ -105,7 +106,7 @@ kept byte for byte, magic and version included, so its writer ports unchanged. T
 | offset | type | field | value |
 |---|---|---|---|
 | 0 | uint32 | magic | `0x52464753` (the bytes `S G F R`) |
-| 4 | uint32 | version | 1; the host refuses any other |
+| 4 | uint32 | version | 2 (1 before `fixed` and `taken`); the host reads 1 and 2 and refuses any other |
 | 8 | int32 | width | frame width in pixels, >= 2 |
 | 12 | int32 | height | frame height in pixels, >= 2 |
 | 16 | int32 | slots | frame slots in the ring, >= 2 (SpaceGod writes 3) |
@@ -113,7 +114,10 @@ kept byte for byte, magic and version included, so its writer ports unchanged. T
 | 24 | int64 | latest | sequence number of the newest whole frame (1, 2, ...); 0 before the first |
 | 32 | int32 | closed | 1 once the game stops feeding |
 | 36 | int32 | fps | the rate the game reads back at (the host's, from `ready`; informational) |
-| 40 | int64[3] | reserved | 0 |
+| 40 | int32 | fixed | the game's fixed-step rate (`-capture-fixed[=fps]`, 60 with no rate), 0 on the wall clock; set before the host starts |
+| 44 | int32 | reserved | 0 |
+| 48 | int64 | taken | the newest sequence number the host has copied out of the ring (the host writes it; fixed step only) |
+| 56 | int64 | reserved | 0 |
 
 The host rejects a mapping whose magic, version or sizes are wrong, or that is smaller than
 `headerBytes + slots * width * height * 4`, with a `ready` carrying `enabled` false and `error`.
@@ -152,3 +156,23 @@ The host, to take the newest frame newer than the one it has (up to three tries)
 4. Still equal: the copy is whole, keep it. Changed (the game overwrote the slot mid-copy): drop the copy, try again.
 
 A torn copy is never sent to the tape: the pump copies into a spare buffer and swaps it in only when it was whole.
+
+### Fixed step
+
+A game that advances a fixed time per rendered frame (Unreal plugin: `-capture-fixed` or `-capture-fixed=<fps>` on the
+game's command line; the game itself puts the engine on that fixed step, as SpaceGod.Unreal's `CaptureFixedStep.cpp`
+does) writes the rate into `fixed`. The tape is then frame-perfect: frame N of the tape is the game's Nth rendered frame,
+whatever the game's or the encoder's speed.
+
+- The game reads back every presented frame, not on a wall-clock interval. With every readback still on the GPU it waits
+  for the oldest one instead of skipping a frame.
+- Before writing frame `seq` it waits until `taken >= seq - slots`, so no frame is overwritten before the host has
+  copied it: a slow encoder slows the game down, never drops a frame. The wait is on the render thread and bounded:
+  after 30 s with no frame taken (no tape running, or the host gone) the game logs it once and stops waiting until
+  `taken` moves again.
+- The host's tape is a fixed-timestep tape (`PushVideoSource.RealTime` false): frames stamped by index at `fixed`/1
+  (the host's `--fps` is replaced by `fixed`), the blocking sink, no encoder-lag stop (the RAM and disk valve still
+  stops a tape). Its pump takes each sequence number after `taken` once, in order, with no wall clock: copy, set
+  `taken`, send. It ends when `closed` is set and every frame written has been sent.
+- No audio: the system-mix tracks run on the wall clock and would not line up with a fixed-step tape, so the host
+  records none and says so in the session log.
