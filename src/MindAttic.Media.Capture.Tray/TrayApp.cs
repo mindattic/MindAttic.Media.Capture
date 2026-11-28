@@ -23,6 +23,9 @@ internal sealed class TrayApp : ApplicationContext
     private readonly MindAttic.Vault.Settings.JsonSettingsStore<TraySettings> _store = TraySettings.CreateStore();
     private readonly FileSystemWatcher? _settingsWatcher;
     private readonly HotkeyWindow _hotkeys = new();
+    private readonly AppWatcher _watcher;
+    // The started app being recorded; its exit stops the recording.
+    private Process? _recordingApp;
     private AreaChoice? _lastArea;
     private ArmedTarget _armed;
     private RecordingBorder? _border;
@@ -45,8 +48,14 @@ internal sealed class TrayApp : ApplicationContext
         _icon = new NotifyIcon { Icon = TrayIcons.Idle, Text = "MindAttic Capture", ContextMenuStrip = _menu, Visible = true };
         _icon.MouseClick += OnIconClick;
         _icon.BalloonTipClicked += OnBalloonClicked;
-        _tick.Tick += (_, _) => UpdateIcon();
+        _tick.Tick += (_, _) =>
+        {
+            if (_recordingApp is { HasExited: true } && _recorder.State == RecorderState.Recording) _ = StopAsync();
+            UpdateIcon();
+        };
         _hotkeys.Pressed += OnHotkey;
+        _watcher = new AppWatcher(() => _settings.Apps);
+        _watcher.WindowReady += (path, pid, window) => _ = OnAppStartedAsync(path, pid, window);
         RegisterHotkeys();
         if (_settings.StartWithWindows != StartupRegistration.IsEnabled()) StartupRegistration.Set(_settings.StartWithWindows);
         BuildMenu();
@@ -186,6 +195,8 @@ internal sealed class TrayApp : ApplicationContext
         _settings.DefaultVideo = next.DefaultVideo;
         _settings.DefaultImage = next.DefaultImage;
         _settings.Regions = next.Regions;
+        _settings.Apps = next.Apps;
+        _watcher.Refresh();
         if (next.StartWithWindows != StartupRegistration.IsEnabled()) StartupRegistration.Set(next.StartWithWindows);
         _settings.StartWithWindows = next.StartWithWindows;
         UpdateIcon();
@@ -282,6 +293,7 @@ internal sealed class TrayApp : ApplicationContext
         screenshot.DropDownItems.Add(new ToolStripMenuItem("Area...", null, (_, _) => _ = PickAreaAsync()));
         _menu.Items.Add(screenshot);
         _menu.Items.Add(RegionsMenu(idle));
+        _menu.Items.Add(AppsMenu(windows));
 
         _menu.Items.Add(new ToolStripSeparator());
         var last = _lastCapture is { } f && File.Exists(f) ? f : null;
@@ -346,6 +358,90 @@ internal sealed class TrayApp : ApplicationContext
             menu.DropDownItems.Add(item);
         }
         return menu;
+    }
+
+    /// <summary>
+    /// Record on Next Start: each registered app, checked while it will be recorded, with Next Start (one-shot),
+    /// Every Start and Remove; Add Running App lists open windows' programs and Add Program... picks any .exe.
+    /// Adding an app arms it for its next start. Apps are told apart by full exe path, so Debug and Release differ.
+    /// </summary>
+    private ToolStripMenuItem AppsMenu(IReadOnlyList<WindowInfo> windows)
+    {
+        var menu = new ToolStripMenuItem("Record on Next Start");
+        foreach (var app in _settings.Apps)
+        {
+            var item = new ToolStripMenuItem(app.Name.Replace("&", "&&")) { Checked = app.Watching, ToolTipText = app.Path };
+            item.DropDownItems.Add(new ToolStripMenuItem("Next Start", null, (_, _) => { app.Armed = !app.Armed; SaveApps(); }) { Checked = app.Armed });
+            item.DropDownItems.Add(new ToolStripMenuItem("Every Start", null, (_, _) => { app.Always = !app.Always; SaveApps(); }) { Checked = app.Always });
+            item.DropDownItems.Add(new ToolStripSeparator());
+            item.DropDownItems.Add(new ToolStripMenuItem("Remove", null, (_, _) => { _settings.Apps.Remove(app); SaveApps(); }));
+            menu.DropDownItems.Add(item);
+        }
+        if (_settings.Apps.Count > 0) menu.DropDownItems.Add(new ToolStripSeparator());
+
+        var running = new ToolStripMenuItem("Add Running App");
+        var programs = windows.Select(w => (Window: w, Path: AppWatcher.ExePath(w.ProcessId)))
+            .Where(x => x.Path is not null && !_settings.Apps.Any(a => a.Is(x.Path)))
+            .DistinctBy(x => x.Path, StringComparer.OrdinalIgnoreCase);
+        foreach (var (w, path) in programs)
+            running.DropDownItems.Add(new ToolStripMenuItem(AppWindowList.MenuText(w), AppWindowList.Icon(w.Hwnd), (_, _) => ArmApp(path!)) { ToolTipText = path });
+        running.Enabled = running.DropDownItems.Count > 0;
+        menu.DropDownItems.Add(running);
+        menu.DropDownItems.Add(new ToolStripMenuItem("Add Program...", null, (_, _) => PickApp()));
+        return menu;
+    }
+
+    private void PickApp()
+    {
+        using var dialog = new OpenFileDialog { Title = "Record this program the next time it starts", Filter = "Programs (*.exe)|*.exe" };
+        if (dialog.ShowDialog() == DialogResult.OK) ArmApp(dialog.FileName);
+    }
+
+    private void ArmApp(string exePath)
+    {
+        var app = _settings.App(exePath);
+        app.Armed = true;
+        SaveApps();
+        Notify($"Ready: {app.Name}", "Records it the next time it starts: lossless, then an MP4 at the same size when you stop it from the tray or the app exits.",
+            ToolTipIcon.Info, 5000, null);
+    }
+
+    private void SaveApps()
+    {
+        _store.Save(_settings);
+        _watcher.Refresh();
+        UpdateIcon();
+    }
+
+    /// <summary>
+    /// A registered app started and showed its window: records that window lossless at its own size (the MP4 is
+    /// exported from it at the same size on stop). A one-shot arm is used up once the recording has started.
+    /// </summary>
+    private async Task OnAppStartedAsync(string path, int pid, WindowInfo window)
+    {
+        if (_settings.Apps.FirstOrDefault(a => a.Is(path)) is not { Watching: true } app) return;
+        if (_recorder.State != RecorderState.Idle)
+        {
+            Notify($"{app.Name} started", "Not recorded: another recording is running. It stays set to record its next start.", ToolTipIcon.Warning, 6000, null);
+            return;
+        }
+        var name = window.ProcessName.Length > 0 ? window.ProcessName : Path.GetFileNameWithoutExtension(path);
+        await RecordAsync(new ArmedTarget(CaptureTarget.Window(window.Hwnd), name, window.Title.Length > 0 ? window.Title : name, FocusedVideo, _settings.DefaultImage), arm: false);
+        if (_recorder.State != RecorderState.Recording) return;
+        try
+        {
+            _recordingApp = Process.GetProcessById(pid);
+        }
+        catch (ArgumentException)
+        {
+            _recordingApp = null;
+        }
+        if (app.Armed)
+        {
+            app.Armed = false;
+            SaveApps();
+        }
+        Notify($"Recording {app.Name}", "Click the tray icon to stop and save; it also stops when the app exits.", ToolTipIcon.Info, 4000, null);
     }
 
     private ArmedTarget Remember(SavedRegion region)
@@ -434,6 +530,8 @@ internal sealed class TrayApp : ApplicationContext
 
     private async Task StopAsync()
     {
+        _recordingApp?.Dispose();
+        _recordingApp = null;
         _border?.Close();
         _border = null;
         var result = await _recorder.StopAsync();
@@ -507,7 +605,9 @@ internal sealed class TrayApp : ApplicationContext
                 break;
             default:
                 _icon.Icon = TrayIcons.Idle;
-                _icon.Text = Truncate($"MindAttic Capture - {_settings.RecordHotkey} records {_armed.Label}");
+                var watching = _settings.Apps.Count(a => a.Watching);
+                _icon.Text = Truncate($"MindAttic Capture - {_settings.RecordHotkey} records {_armed.Label}"
+                    + (watching > 0 ? $"; {watching} app(s) record on start" : ""));
                 _tick.Stop();
                 break;
         }
@@ -533,6 +633,7 @@ internal sealed class TrayApp : ApplicationContext
             else break;
         }
         _settingsWatcher?.Dispose();
+        _watcher.Dispose();
         _hotkeys.Dispose();
         _icon.Visible = false;
         _icon.Dispose();

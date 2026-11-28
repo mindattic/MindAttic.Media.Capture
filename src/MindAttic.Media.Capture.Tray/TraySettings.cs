@@ -49,12 +49,41 @@ internal sealed class SavedRegion
 }
 
 /// <summary>
+/// A program the tray records when it starts, by its exe's full path: a Debug and a Release build are two apps.
+/// Its window is recorded lossless at its own size and exported to MP4 at the same size when the recording stops.
+/// </summary>
+internal sealed class WatchedApp
+{
+    [Setting("Program", Order = 1, Help = "Full path of the .exe. A Debug and a Release build of the same app are separate entries.")]
+    [PathPicker(PathKind.File)]
+    public string Path { get; set; } = "";
+
+    [Setting("Record its next start", Order = 2, Help = "Records it once, the next time it starts; cleared when that recording starts.")]
+    public bool Armed { get; set; }
+
+    [Setting("Record every start", Order = 3, Help = "Records it every time it starts.")]
+    public bool Always { get; set; }
+
+    [JsonIgnore]
+    public bool Watching => Armed || Always;
+
+    /// <summary>"SpaceGod.exe (Debug)": the file and its folder, so two builds of one app read apart.</summary>
+    [JsonIgnore]
+    public string Name =>
+        System.IO.Path.GetFileName(System.IO.Path.GetDirectoryName(Path)) is { Length: > 0 } folder
+            ? $"{System.IO.Path.GetFileName(Path)} ({folder})"
+            : System.IO.Path.GetFileName(Path);
+
+    public bool Is(string? exePath) => exePath is not null && string.Equals(Path, exePath, StringComparison.OrdinalIgnoreCase);
+}
+
+/// <summary>
 /// The tray recorder's settings: a per-machine MindAttic Vault settings app in
 /// <c>%LOCALAPPDATA%\MindAttic\Capture\settings.json</c>, edited in MindAttic.Vault.Desktop (tray Settings...).
 /// The tray applies saved edits live. Imported once from the older <c>tray.json</c> beside it.
 /// </summary>
 [SettingsApp(AppId, "MindAttic.Capture", Local = true, Icon = "video",
-    Description = "Tray recorder: hotkeys, where captures go, default formats and saved regions.")]
+    Description = "Tray recorder: hotkeys, where captures go, default formats, saved regions and apps recorded when they start.")]
 internal sealed class TraySettings
 {
     public const string AppId = "Capture";
@@ -110,6 +139,21 @@ internal sealed class TraySettings
     [Setting("Saved regions", Group = "Regions", Order = 1, Help = "Areas to record again without redrawing them.")]
     [SettingCollection(ItemName = "region", ItemLabel = nameof(SavedRegion.Name))]
     public List<SavedRegion> Regions { get; set; } = [];
+
+    [Setting("Record when they start", Group = "Apps", Order = 1,
+        Help = "Programs the tray watches; one set to record is recorded lossless when its window appears, and exported to MP4 at the same size when it stops. Set them up from the tray's Record on Next Start menu.")]
+    [SettingCollection(ItemName = "app", ItemLabel = nameof(WatchedApp.Path))]
+    public List<WatchedApp> Apps { get; set; } = [];
+
+    /// <summary>The registered app for <paramref name="exePath"/>, added when it isn't one yet.</summary>
+    public WatchedApp App(string exePath)
+    {
+        var full = System.IO.Path.GetFullPath(exePath);
+        if (Apps.FirstOrDefault(a => a.Is(full)) is { } app) return app;
+        app = new WatchedApp { Path = full };
+        Apps.Add(app);
+        return app;
+    }
 
     /// <summary>The Vault store (camelCase, enum names) in the app's per-machine folder.</summary>
     public static JsonSettingsStore<TraySettings> CreateStore(string? directory = null) =>
